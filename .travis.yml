@@ -1,0 +1,9 @@
+language: android
+android:
+  components:
+    - tools
+    - android-24
+    - build-tools-24.0.3
+    - platform-tools
+script:
+    - ./gradlew build
