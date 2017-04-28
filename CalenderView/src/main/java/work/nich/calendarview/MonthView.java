@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.util.SparseBooleanArray;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -29,12 +30,13 @@ public class MonthView extends View {
     private static final int SELECTED_CIRCLE_ALPHA = 50;
     private static final int DEFAULT_DAY_HEIGHT = 35;
     private static final int DEFAULT_DAY_TEXT_SIZE = 16;
+    private static final int COMPENSATE_HEIGHT = 5;
 
     private static final int ROW_NUM = 6;
     private static final int COLUMN_NUM = 7;
 
     private String[] mDaysIndicator = {"一", "二", "三", "四", "五", "六", "日"};
-    private SparseBooleanArray mHighlightDayArray;
+    private SparseArray<HighlightType> mHighlightDayArray; // Array to store highlight type of day;
     private OnDayClickedListener mOnDayClickedListener;
 
     private int mPrimaryDarkColor;
@@ -44,6 +46,7 @@ public class MonthView extends View {
     private int mSelectedDayColor;
 
     private int mRowHeight;
+    private int mCompensateHeight;
     private int mTextSize;
     private int mWidth;
     private int mPadding;
@@ -78,12 +81,13 @@ public class MonthView extends View {
 
         mRowHeight = dp2px(DEFAULT_DAY_HEIGHT);
         mTextSize = sp2px(DEFAULT_DAY_TEXT_SIZE);
+        mCompensateHeight = dp2px(COMPENSATE_HEIGHT);
 
         mFirstDayOfWeek = Calendar.MONDAY; // default value of start day of the week
 
         mDayCalendar = Calendar.getInstance();
         mMonthDayNum = mDayCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        mHighlightDayArray = new SparseBooleanArray();
+        mHighlightDayArray = new SparseArray<HighlightType>();
 
         mPrimaryDarkColor = COLOR_PRIMARY_DARK_BLUE;
         mPrimaryLightColor = COLOR_PRIMARY_LIGHT_BLUE;
@@ -125,7 +129,7 @@ public class MonthView extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mRowHeight * ROW_NUM);
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mRowHeight * ROW_NUM + mCompensateHeight);
     }
 
     @Override
@@ -157,18 +161,46 @@ public class MonthView extends View {
         float y = mRowHeight * 2 - mTextSize / 2; // start at the bottom of indicator and take the center vertical coordinate as y
         int dayOffset = getDayOffset();
 
-        for (int i = 1; i <= mMonthDayNum; i++) {
-            int columnNum = (i + dayOffset) % 7;
+        for (int day = 1; day <= mMonthDayNum; day++) {
+            int columnNum = (day + dayOffset) % 7;
             // locate every single "day"
             float x = columnNum * mWidthOfEveryday + mHalfWidthOfEveryday;
 
-            if (i == getTodayOfMonth() || mHighlightDayArray.get(i, false)) { // day to highlight
-                canvas.drawCircle(x, y - mTextSize / 3, mTextSize, mSelectedCirclePaint);
-            }
-            canvas.drawText(Integer.toString(i), x, y, mMonthDayPaint);
+            canvas.drawText(Integer.toString(day), x, y, mMonthDayPaint);
+
+            drawHighlight(canvas, day, x, y);
+
             if (columnNum + 1 == COLUMN_NUM) {
                 y += mRowHeight;
             }
+        }
+    }
+
+    /**
+     * Draw specify highlight.
+     * TODO : Let the user to draw their highlight style by overriding this method.
+     *
+     * @param canvas just the canvas you want
+     * @param day    the day you wanna highlight
+     * @param x      x-coordinate of this day (center)
+     * @param y      y-coordinate of this day (center)
+     */
+    public void drawHighlight(Canvas canvas, int day, float x, float y) {
+        switch (mHighlightDayArray.get(day, HighlightType.NO_HIGHLIGHT)) {
+            case NO_HIGHLIGHT:
+                break;
+            case SOLID_CIRCLE:
+                canvas.drawCircle(x, y - mTextSize / 3, mTextSize, mSelectedCirclePaint);
+                break;
+            case RING_ONLY:
+                // TODO : Draw ring.
+                break;
+            case TOP_SEMICIRCLE:
+                // TODO : Draw top semicircle.
+                break;
+            case BOTTOM_SEMICIRCLE:
+                // TODO : Draw bottom semicircle.
+                break;
         }
     }
 
@@ -177,7 +209,13 @@ public class MonthView extends View {
         switch (event.getAction()) {
             case MotionEvent.ACTION_UP:
                 int day = locateClickedDay(event);
-                highlightDay(day);
+                if (0 <= day) {
+                    highlightDay(day);
+
+                    if (mOnDayClickedListener != null) {
+                        mOnDayClickedListener.onDayClicked(day);
+                    }
+                }
                 break;
         }
         return true;
@@ -210,10 +248,10 @@ public class MonthView extends View {
     }
 
     private void toggleHighlight(int i) {
-        if (mHighlightDayArray.get(i, false)) {
-            mHighlightDayArray.append(i, false);
+        if (mHighlightDayArray.get(i, HighlightType.NO_HIGHLIGHT) == HighlightType.NO_HIGHLIGHT) {
+            mHighlightDayArray.append(i, HighlightType.SOLID_CIRCLE);
         } else {
-            mHighlightDayArray.append(i, true);
+            mHighlightDayArray.append(i, HighlightType.SOLID_CIRCLE);
         }
     }
 
@@ -233,7 +271,7 @@ public class MonthView extends View {
         return Math.abs(startDayOfWeek - mFirstDayOfWeek - 1);
     }
 
-    public void setOnDayClickedListener(OnDayClickedListener listener){
+    public void setOnDayClickedListener(OnDayClickedListener listener) {
         this.mOnDayClickedListener = listener;
     }
 
@@ -249,7 +287,7 @@ public class MonthView extends View {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, getResources().getDisplayMetrics());
     }
 
-    public interface OnDayClickedListener{
+    public interface OnDayClickedListener {
         void onDayClicked(int day);
     }
 }
