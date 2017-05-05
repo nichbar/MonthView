@@ -5,7 +5,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.SparseArray;
-import android.util.SparseBooleanArray;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
@@ -87,7 +86,7 @@ public class MonthView extends View {
 
         mDayCalendar = Calendar.getInstance();
         mMonthDayNum = mDayCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        mHighlightDayArray = new SparseArray<HighlightType>();
+        mHighlightDayArray = new SparseArray<>();
 
         mPrimaryDarkColor = COLOR_PRIMARY_DARK_BLUE;
         mPrimaryLightColor = COLOR_PRIMARY_LIGHT_BLUE;
@@ -265,10 +264,16 @@ public class MonthView extends View {
 
     private int getDayOffset() {
         // TODO provide method to change the default selected day
+        mDayCalendar.set(Calendar.MONTH, Calendar.JUNE);
         mDayCalendar.set(Calendar.DAY_OF_MONTH, 1);
 
         int startDayOfWeek = mDayCalendar.get(Calendar.DAY_OF_WEEK);
-        return Math.abs(startDayOfWeek - mFirstDayOfWeek - 1);
+        int offset = startDayOfWeek - mFirstDayOfWeek - Calendar.SUNDAY;
+        if (offset < 0){
+            return offset + 7;
+        }else {
+            return offset;
+        }
     }
 
     public void setOnDayClickedListener(OnDayClickedListener listener) {
