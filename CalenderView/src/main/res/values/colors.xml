@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="nc_default_day_text_color">#333333</color>
+    <color name="nc_default_highlighted_day_text_color">#1e89ff</color>
+    <color name="nc_default_indicator_text_color">#666666</color>
+    <color name="nc_default_highlighted_color">#bfdfff</color>
+</resources>
