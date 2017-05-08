@@ -18,12 +18,13 @@ import java.util.Calendar;
  */
 
 public class MonthView extends View {
+    private Paint mDayTextPaint;
     private Paint mWeekdayIndicatorPaint;
-    private Paint mMonthDayTextPaint;
-    private Paint mHighlightedMonthDayTextPaint;
+    private Paint mHighlightedDayTextPaint;
     private Paint mHighlightedCirclePaint;
     private Paint mHighlightedRingPaint;
-    
+
+    // TODO Constants listed below should be able to set in layout XML.
     private static final int DEFAULT_DAY_HEIGHT = 40;
     private static final int DEFAULT_DAY_TEXT_SIZE = 14;
     private static final int COMPENSATE_HEIGHT = 8;
@@ -33,7 +34,7 @@ public class MonthView extends View {
     private static final int COLUMN_NUM = 7;
     
     private String[] mDaysIndicator = {"一", "二", "三", "四", "五", "六", "日"};
-    private SparseArray<HighlightType> mHighlightDayArray; // Array to store highlight type of day;
+    private SparseArray<HighlightType> mDayArray; // Array of storing highlight type of day;
     private OnDayClickedListener mOnDayClickedListener;
     
     private int mIndicatorColor;
@@ -43,7 +44,7 @@ public class MonthView extends View {
     
     private int mRowHeight;
     private int mCompensateHeight;
-    private int mDayRadius; // The radius of highlighted day's circle.
+    private int mDayRadius; // Radius of highlighted day's circle.
     private int mTextSize;
     private int mWidth;
     private int mPadding;
@@ -85,7 +86,7 @@ public class MonthView extends View {
         
         mDayCalendar = Calendar.getInstance();
         mMonthDayNum = mDayCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        mHighlightDayArray = new SparseArray<>();
+        mDayArray = new SparseArray<>();
         
         // TODO Provide day theme and night theme for switching.
         mIndicatorColor = getResources().getColor(R.color.nc_default_indicator_text_color);
@@ -108,20 +109,19 @@ public class MonthView extends View {
         mHighlightedRingPaint.setStyle(Paint.Style.STROKE);
         mHighlightedRingPaint.setColor(mHighlightedColor);
         
-        mMonthDayTextPaint = new Paint();
-        mMonthDayTextPaint.setAntiAlias(true);
-        mMonthDayTextPaint.setColor(mDayTextColor);
-        mMonthDayTextPaint.setStyle(Paint.Style.FILL);
-        mMonthDayTextPaint.setTextSize(mTextSize);
-        mMonthDayTextPaint.setTextAlign(Paint.Align.CENTER);
+        mDayTextPaint = new Paint();
+        mDayTextPaint.setAntiAlias(true);
+        mDayTextPaint.setColor(mDayTextColor);
+        mDayTextPaint.setStyle(Paint.Style.FILL);
+        mDayTextPaint.setTextSize(mTextSize);
+        mDayTextPaint.setTextAlign(Paint.Align.CENTER);
         
-        mHighlightedMonthDayTextPaint = new Paint();
-        mHighlightedMonthDayTextPaint.setAntiAlias(true);
-        mHighlightedMonthDayTextPaint.setFakeBoldText(true);
-        mHighlightedMonthDayTextPaint.setStyle(Paint.Style.FILL);
-        mHighlightedMonthDayTextPaint.setTextSize(mTextSize);
-        mHighlightedMonthDayTextPaint.setColor(mHighlightedTextColor);
-        mHighlightedMonthDayTextPaint.setTextAlign(Paint.Align.CENTER);
+        mHighlightedDayTextPaint = new Paint();
+        mHighlightedDayTextPaint.setAntiAlias(true);
+        mHighlightedDayTextPaint.setStyle(Paint.Style.FILL);
+        mHighlightedDayTextPaint.setTextSize(mTextSize);
+        mHighlightedDayTextPaint.setColor(mHighlightedTextColor);
+        mHighlightedDayTextPaint.setTextAlign(Paint.Align.CENTER);
         
         mHighlightedCirclePaint = new Paint();
         mHighlightedCirclePaint.setAntiAlias(true);
@@ -137,7 +137,7 @@ public class MonthView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         drawWeekdayIndicator(canvas);
-        drawMonthDay(canvas);
+        drawDay(canvas);
     }
     
     @Override
@@ -159,7 +159,7 @@ public class MonthView extends View {
         }
     }
     
-    private void drawMonthDay(Canvas canvas) {
+    private void drawDay(Canvas canvas) {
         float y = mRowHeight * 2 - mTextSize / 2; // start at the bottom of indicator and take the center vertical coordinate as y
         int dayOffset = getDayOffset();
         
@@ -167,47 +167,65 @@ public class MonthView extends View {
             int columnNum = (day + dayOffset) % 7;
             // locate every single "day"
             float x = columnNum * mWidthOfEveryday + mHalfWidthOfEveryday;
-            
-            drawHighlight(canvas, day, x, y);
-            
-            canvas.drawText(Integer.toString(day), x, y, mMonthDayTextPaint);
+
+            HighlightType type = mDayArray.get(day, HighlightType.NO_HIGHLIGHT);
+            drawSpecificDay(canvas, type, day, x, y);
             
             if (columnNum + 1 == COLUMN_NUM) {
                 y += mRowHeight;
             }
         }
     }
-    
+
     /**
-     * Draw specify highlight.
-     * TODO : Let the user to draw their highlight style by overriding this method.
+     * Draw specify day.
+     * You can draw your own day in different highlighted style by overriding this method.
      *
      * @param canvas just the canvas you want
-     * @param day    the day you wanna highlight
+     * @param type   the type of highlight style
+     * @param day    the day you wanna draw
      * @param x      x-coordinate of this day (center)
      * @param y      y-coordinate of this day (center)
      */
-    public void drawHighlight(Canvas canvas, int day, float x, float y) {
+    public void drawSpecificDay(Canvas canvas, HighlightType type, int day, float x, float y) {
         RectF rectF = new RectF(x - mDayRadius, y - mDayRadius - mTextSize / 3, x + mDayRadius, y + mDayRadius - mTextSize / 3);
-        
-        switch (mHighlightDayArray.get(day, HighlightType.NO_HIGHLIGHT)) {
+        switch (type) {
             case NO_HIGHLIGHT:
+                drawDayText(canvas, day, x, y, mDayTextPaint);
                 break;
             case SOLID_CIRCLE:
-                canvas.drawCircle(x, y - mTextSize / 3, mDayRadius, mHighlightedCirclePaint);
+                drawCircle(canvas, x, y - mTextSize / 3, mDayRadius, mHighlightedCirclePaint);
+                drawDayText(canvas, day, x, y, mHighlightedDayTextPaint);
                 break;
             case RING_ONLY:
-                canvas.drawCircle(x, y - mTextSize / 3, mDayRadius, mHighlightedRingPaint);
+                drawCircle(canvas, x, y - mTextSize / 3, mDayRadius, mHighlightedRingPaint);
+                drawDayText(canvas, day, x, y, mHighlightedDayTextPaint);
                 break;
             case TOP_SEMICIRCLE:
-                canvas.drawArc(rectF, 0, 180, false, mHighlightedCirclePaint);
+                drawCircle(canvas, x, y - mTextSize / 3, mDayRadius, mHighlightedRingPaint);
+                drawSemiCircle(canvas, rectF, 0, 180, mHighlightedCirclePaint);
+                drawDayText(canvas, day, x, y, mHighlightedDayTextPaint);
                 break;
             case BOTTOM_SEMICIRCLE:
-                canvas.drawArc(rectF, 180, 180, false, mHighlightedCirclePaint);
+                drawCircle(canvas, x, y - mTextSize / 3, mDayRadius, mHighlightedRingPaint);
+                drawSemiCircle(canvas, rectF, 180, 180, mHighlightedCirclePaint);
+                drawDayText(canvas, day, x, y, mHighlightedDayTextPaint);
                 break;
         }
     }
-    
+
+    private void drawDayText(Canvas canvas, int day, float x, float y, Paint paint) {
+        canvas.drawText(Integer.toString(day), x, y, paint);
+    }
+
+    private void drawSemiCircle(Canvas canvas, RectF rectF, float startAngle, float sweepAngle, Paint paint) {
+        canvas.drawArc(rectF, startAngle, sweepAngle, false, paint);
+    }
+
+    private void drawCircle(Canvas canvas, float cx, float cy, float radius, Paint paint){
+        canvas.drawCircle(cx, cy, radius, paint);
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
@@ -252,14 +270,14 @@ public class MonthView extends View {
     }
     
     private void toggleHighlight(int i) {
-        if (mHighlightDayArray.get(i, HighlightType.NO_HIGHLIGHT) == HighlightType.NO_HIGHLIGHT) {
-            mHighlightDayArray.append(i, HighlightType.SOLID_CIRCLE);
+        if (mDayArray.get(i, HighlightType.NO_HIGHLIGHT) == HighlightType.NO_HIGHLIGHT) {
+            mDayArray.append(i, HighlightType.SOLID_CIRCLE);
         } else {
-            mHighlightDayArray.append(i, HighlightType.SOLID_CIRCLE);
+            mDayArray.append(i, HighlightType.TOP_SEMICIRCLE);
         }
     }
     
-    private int getTodayOfMonth() {
+    private int getDayOfMonth() {
         if (mToday == 0) {
             Calendar cal = Calendar.getInstance();
             mToday = cal.get(Calendar.DAY_OF_MONTH);
@@ -280,7 +298,7 @@ public class MonthView extends View {
         }
     }
     
-    public void setOnDayClickedListener(OnDayClickedListener listener) {
+    public void setOnDayClickListener(OnDayClickedListener listener) {
         this.mOnDayClickedListener = listener;
     }
     
@@ -295,7 +313,11 @@ public class MonthView extends View {
     private int sp2px(int sp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, getResources().getDisplayMetrics());
     }
-    
+
+    /**
+     * Listener of every single "day".
+     * You may use setOnDayClickListener and listen to click(touch exactly) event over every single "day".
+     */
     public interface OnDayClickedListener {
         void onDayClicked(int day);
     }
