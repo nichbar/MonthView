@@ -13,8 +13,9 @@ import android.view.View;
 import java.util.Calendar;
 
 /**
- * This file is created by nich
- * on 2017/3/22 in Calendar
+ * MonthView
+ * @author nich
+ * Guangzhou, China, Asia, Earth.
  */
 
 public class MonthView extends View {
@@ -29,72 +30,72 @@ public class MonthView extends View {
     private static final int DEFAULT_DAY_TEXT_SIZE = 14;
     private static final int COMPENSATE_HEIGHT = 8;
     private static final int DEFAULT_DAY_RADIUS = 18;
-    
+
     private static final int ROW_NUM = 6;
     private static final int COLUMN_NUM = 7;
-    
+
     private String[] mDaysIndicator = {"一", "二", "三", "四", "五", "六", "日"};
     private SparseArray<HighlightType> mDayArray; // Array of storing highlight type of day;
     private OnDayClickedListener mOnDayClickedListener;
-    
+
     private int mIndicatorColor;
     private int mHighlightedColor;
     private int mDayTextColor;
     private int mHighlightedTextColor;
-    
+
     private int mRowHeight;
     private int mCompensateHeight;
     private int mDayRadius; // Radius of highlighted day's circle.
     private int mTextSize;
     private int mWidth;
     private int mPadding;
-    
+
     private int mFirstDayOfWeek;
     private int mMonthDayNum;
     private int mToday;
-    
+
     private float mWidthOfEveryday;
     private float mHalfWidthOfEveryday;
-    
-    private Calendar mDayCalendar;
-    
+
+    private Calendar mCalendar;
+
     public MonthView(Context context) {
         this(context, null);
     }
-    
+
     public MonthView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(attrs);
         initPaint();
     }
-    
+
     public MonthView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(attrs);
         initPaint();
     }
-    
+
     private void init(AttributeSet attrs) {
         // TODO Try to get color, text size and text fonts from attrs, use default value if attrs haven't not been declared.
-        
+
         mRowHeight = dp2px(DEFAULT_DAY_HEIGHT);
         mTextSize = sp2px(DEFAULT_DAY_TEXT_SIZE);
         mCompensateHeight = dp2px(COMPENSATE_HEIGHT);
         mDayRadius = dp2px(DEFAULT_DAY_RADIUS);
-        
+
         mFirstDayOfWeek = Calendar.MONDAY; // default value of start day of the week
-        
-        mDayCalendar = Calendar.getInstance();
-        mMonthDayNum = mDayCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+
+        mCalendar = Calendar.getInstance();
+        mMonthDayNum = mCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
         mDayArray = new SparseArray<>();
-        
+
         // TODO Provide day theme and night theme for switching.
         mIndicatorColor = getResources().getColor(R.color.nc_default_indicator_text_color);
         mHighlightedColor = getResources().getColor(R.color.nc_default_highlighted_color);
         mDayTextColor = getResources().getColor(R.color.nc_default_day_text_color);
         mHighlightedTextColor = getResources().getColor(R.color.nc_default_highlighted_day_text_color);
     }
-    
+
     private void initPaint() {
         mWeekdayIndicatorPaint = new Paint();
         mWeekdayIndicatorPaint.setAntiAlias(true);
@@ -103,43 +104,37 @@ public class MonthView extends View {
         mWeekdayIndicatorPaint.setStyle(Paint.Style.FILL);
         mWeekdayIndicatorPaint.setColor(mIndicatorColor);
         mWeekdayIndicatorPaint.setTextAlign(Paint.Align.CENTER);
-        
+
         mHighlightedRingPaint = new Paint();
         mHighlightedRingPaint.setAntiAlias(true);
         mHighlightedRingPaint.setStyle(Paint.Style.STROKE);
         mHighlightedRingPaint.setColor(mHighlightedColor);
-        
+
         mDayTextPaint = new Paint();
         mDayTextPaint.setAntiAlias(true);
         mDayTextPaint.setColor(mDayTextColor);
         mDayTextPaint.setStyle(Paint.Style.FILL);
         mDayTextPaint.setTextSize(mTextSize);
         mDayTextPaint.setTextAlign(Paint.Align.CENTER);
-        
+
         mHighlightedDayTextPaint = new Paint();
         mHighlightedDayTextPaint.setAntiAlias(true);
         mHighlightedDayTextPaint.setStyle(Paint.Style.FILL);
         mHighlightedDayTextPaint.setTextSize(mTextSize);
         mHighlightedDayTextPaint.setColor(mHighlightedTextColor);
         mHighlightedDayTextPaint.setTextAlign(Paint.Align.CENTER);
-        
+
         mHighlightedCirclePaint = new Paint();
         mHighlightedCirclePaint.setAntiAlias(true);
         mHighlightedCirclePaint.setStyle(Paint.Style.FILL);
         mHighlightedCirclePaint.setColor(mHighlightedColor);
     }
-    
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mRowHeight * ROW_NUM + mCompensateHeight);
     }
-    
-    @Override
-    protected void onDraw(Canvas canvas) {
-        drawWeekdayIndicator(canvas);
-        drawDay(canvas);
-    }
-    
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         mWidth = w;
@@ -147,10 +142,16 @@ public class MonthView extends View {
         mWidthOfEveryday = mWidth / COLUMN_NUM;
         mHalfWidthOfEveryday = mWidthOfEveryday / 2;
     }
-    
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        drawWeekdayIndicator(canvas);
+        drawDay(canvas);
+    }
+
     private void drawWeekdayIndicator(Canvas canvas) {
         float y = mRowHeight - mTextSize / 2;
-        
+
         for (int i = 0; i < COLUMN_NUM; i++) {
             float x = i * mWidthOfEveryday + mHalfWidthOfEveryday;
             int dayOfWeek = i % COLUMN_NUM;  // TODO provide method to change the first day of the week.
@@ -158,11 +159,11 @@ public class MonthView extends View {
             canvas.drawText(indicator, x, y, mWeekdayIndicatorPaint);
         }
     }
-    
+
     private void drawDay(Canvas canvas) {
         float y = mRowHeight * 2 - mTextSize / 2; // start at the bottom of indicator and take the center vertical coordinate as y
         int dayOffset = getDayOffset();
-        
+
         for (int day = 1; day <= mMonthDayNum; day++) {
             int columnNum = (day + dayOffset) % 7;
             // locate every single "day"
@@ -170,7 +171,7 @@ public class MonthView extends View {
 
             HighlightType type = mDayArray.get(day, HighlightType.NO_HIGHLIGHT);
             drawSpecificDay(canvas, type, day, x, y);
-            
+
             if (columnNum + 1 == COLUMN_NUM) {
                 y += mRowHeight;
             }
@@ -222,7 +223,7 @@ public class MonthView extends View {
         canvas.drawArc(rectF, startAngle, sweepAngle, false, paint);
     }
 
-    private void drawCircle(Canvas canvas, float cx, float cy, float radius, Paint paint){
+    private void drawCircle(Canvas canvas, float cx, float cy, float radius, Paint paint) {
         canvas.drawCircle(cx, cy, radius, paint);
     }
 
@@ -233,7 +234,7 @@ public class MonthView extends View {
                 int day = locateClickedDay(event);
                 if (0 <= day) {
                     highlightDay(day);
-                    
+
                     if (mOnDayClickedListener != null) {
                         mOnDayClickedListener.onDayClicked(day);
                     }
@@ -242,20 +243,20 @@ public class MonthView extends View {
         }
         return true;
     }
-    
+
     private void highlightDay(int day) {
         toggleHighlight(day);
         invalidate();
     }
-    
+
     private int locateClickedDay(MotionEvent event) {
         int day = 0;
         float touchX = event.getX();
         float touchY = event.getY();
-        
+
         float y = mRowHeight * 2 - mTextSize / 2; // start at the bottom of indicator and take the center vertical coordinate as y
         int dayOffset = getDayOffset();
-        
+
         for (int i = 1; i <= mMonthDayNum; i++) {
             int columnNum = (i + dayOffset) % 7;
             float x = columnNum * mWidthOfEveryday + mHalfWidthOfEveryday;
@@ -268,7 +269,7 @@ public class MonthView extends View {
         }
         return day;
     }
-    
+
     private void toggleHighlight(int i) {
         if (mDayArray.get(i, HighlightType.NO_HIGHLIGHT) == HighlightType.NO_HIGHLIGHT) {
             mDayArray.append(i, HighlightType.SOLID_CIRCLE);
@@ -276,7 +277,7 @@ public class MonthView extends View {
             mDayArray.append(i, HighlightType.TOP_SEMICIRCLE);
         }
     }
-    
+
     private int getDayOfMonth() {
         if (mToday == 0) {
             Calendar cal = Calendar.getInstance();
@@ -284,12 +285,12 @@ public class MonthView extends View {
         }
         return mToday;
     }
-    
+
     private int getDayOffset() {
         // TODO provide method to change the default selected day
-        mDayCalendar.set(Calendar.DAY_OF_MONTH, 1);
-        
-        int startDayOfWeek = mDayCalendar.get(Calendar.DAY_OF_WEEK);
+        mCalendar.set(Calendar.DAY_OF_MONTH, 1);
+
+        int startDayOfWeek = mCalendar.get(Calendar.DAY_OF_WEEK);
         int offset = startDayOfWeek - mFirstDayOfWeek - Calendar.SUNDAY;
         if (offset < 0) {
             return offset + 7;
@@ -297,19 +298,29 @@ public class MonthView extends View {
             return offset;
         }
     }
-    
+
+    /**
+     * Set the calendar.
+     * This calendar instance is the fundamental of this MonthView class.
+     *
+     * @param calendar the calendar you want this MonthView to show.
+     */
+    public void setCalendar(Calendar calendar) {
+        mCalendar = calendar;
+    }
+
     public void setOnDayClickListener(OnDayClickedListener listener) {
         this.mOnDayClickedListener = listener;
     }
-    
+
     private String getWeekdayIndicator(int dayOfWeek) {
         return mDaysIndicator[dayOfWeek];
     }
-    
+
     private int dp2px(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
     }
-    
+
     private int sp2px(int sp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, getResources().getDisplayMetrics());
     }
