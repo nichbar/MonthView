@@ -31,11 +31,10 @@ public class MonthView extends View {
     private static final int COMPENSATE_HEIGHT = 8;
     private static final int DEFAULT_DAY_RADIUS = 18;
 
-    private static final int ROW_NUM = 6;
     private static final int COLUMN_NUM = 7;
 
     private String[] mDaysIndicator = {"一", "二", "三", "四", "五", "六", "日"};
-    private SparseArray<HighlightType> mDayArray; // Array of storing highlight type of day;
+    private SparseArray<HighlightStyle> mDayArray; // Array of storing highlight style of day;
     private OnDayClickedListener mOnDayClickedListener;
 
     private int mIndicatorColor;
@@ -48,11 +47,10 @@ public class MonthView extends View {
     private int mDayRadius; // Radius of highlighted day's circle.
     private int mTextSize;
     private int mWidth;
-    private int mPadding;
 
     private int mFirstDayOfWeek;
     private int mMonthDayNum;
-    private int mRowNum; // the row number of
+    private int mRowNum; // the row number of Month
     private int mToday;
 
     private float mWidthOfDay;
@@ -133,16 +131,18 @@ public class MonthView extends View {
 
         if (mCalendar == null) {
             mCalendar = Calendar.getInstance();
-            mMonthDayNum = mCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
         }
         if (mDayArray == null){
             mDayArray = new SparseArray<>();
         }
+
+        mMonthDayNum = mCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+        mRowNum = (int) Math.ceil((float) (getDayOffset() + 1 + mMonthDayNum) / (float) COLUMN_NUM);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mRowHeight * ROW_NUM + mCompensateHeight);
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mRowHeight * mRowNum + mCompensateHeight);
     }
 
     @Override
@@ -179,8 +179,8 @@ public class MonthView extends View {
             // locate every single "day"
             float x = columnNum * mWidthOfDay + mHalfWidthOfDay;
 
-            HighlightType type = mDayArray.get(day, HighlightType.NO_HIGHLIGHT);
-            drawSpecificDay(canvas, type, day, x, y);
+            HighlightStyle style = mDayArray.get(day, HighlightStyle.NO_HIGHLIGHT);
+            drawSpecificDay(canvas, style, day, x, y);
 
             if (columnNum + 1 == COLUMN_NUM) {
                 y += mRowHeight;
@@ -193,14 +193,14 @@ public class MonthView extends View {
      * You can draw your own day in different highlighted style by overriding this method.
      *
      * @param canvas just the canvas you want
-     * @param type   the type of highlight style
+     * @param style   the style of highlight style
      * @param day    the day you wanna draw
      * @param x      x-coordinate of this day (center)
      * @param y      y-coordinate of this day (center)
      */
-    public void drawSpecificDay(Canvas canvas, HighlightType type, int day, float x, float y) {
+    public void drawSpecificDay(Canvas canvas, HighlightStyle style, int day, float x, float y) {
         RectF rectF = new RectF(x - mDayRadius, y - mDayRadius - mTextSize / 3, x + mDayRadius, y + mDayRadius - mTextSize / 3);
-        switch (type) {
+        switch (style) {
             case NO_HIGHLIGHT:
                 drawDayText(canvas, day, x, y, mDayTextPaint);
                 break;
@@ -281,10 +281,10 @@ public class MonthView extends View {
     }
 
     private void toggleHighlight(int i) {
-        if (mDayArray.get(i, HighlightType.NO_HIGHLIGHT) == HighlightType.NO_HIGHLIGHT) {
-            mDayArray.append(i, HighlightType.SOLID_CIRCLE);
+        if (mDayArray.get(i, HighlightStyle.NO_HIGHLIGHT) == HighlightStyle.NO_HIGHLIGHT) {
+            mDayArray.append(i, HighlightStyle.SOLID_CIRCLE);
         } else {
-            mDayArray.append(i, HighlightType.TOP_SEMICIRCLE);
+            mDayArray.append(i, HighlightStyle.NO_HIGHLIGHT);
         }
     }
 
@@ -322,9 +322,9 @@ public class MonthView extends View {
     /**
      * Set the day sparseArray.
      * onDraw method is base on this array to decide whether this day should be highlighted and which style it should be highlighted.
-     * @param array a sparseArray , the key is the day, the value is the style you wanna highlight in {@link HighlightType}
+     * @param array a sparseArray , the key is the day, the value is the style you wanna highlight in {@link HighlightStyle}
      */
-    public void setDayStyleArray(SparseArray<HighlightType> array){
+    public void setDayStyleArray(SparseArray<HighlightStyle> array){
         mDayArray = array;
     }
 
