@@ -52,10 +52,11 @@ public class MonthView extends View {
 
     private int mFirstDayOfWeek;
     private int mMonthDayNum;
+    private int mRowNum; // the row number of
     private int mToday;
 
-    private float mWidthOfEveryday;
-    private float mHalfWidthOfEveryday;
+    private float mWidthOfDay;
+    private float mHalfWidthOfDay;
 
     private Calendar mCalendar;
 
@@ -84,10 +85,6 @@ public class MonthView extends View {
         mDayRadius = dp2px(DEFAULT_DAY_RADIUS);
 
         mFirstDayOfWeek = Calendar.MONDAY; // default value of start day of the week
-
-        mCalendar = Calendar.getInstance();
-        mMonthDayNum = mCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        mDayArray = new SparseArray<>();
 
         // TODO Provide day theme and night theme for switching.
         mIndicatorColor = getResources().getColor(R.color.nc_default_indicator_text_color);
@@ -131,6 +128,19 @@ public class MonthView extends View {
     }
 
     @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+
+        if (mCalendar == null) {
+            mCalendar = Calendar.getInstance();
+            mMonthDayNum = mCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+        }
+        if (mDayArray == null){
+            mDayArray = new SparseArray<>();
+        }
+    }
+
+    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mRowHeight * ROW_NUM + mCompensateHeight);
     }
@@ -139,8 +149,8 @@ public class MonthView extends View {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         mWidth = w;
         // initial the width of every "day"
-        mWidthOfEveryday = mWidth / COLUMN_NUM;
-        mHalfWidthOfEveryday = mWidthOfEveryday / 2;
+        mWidthOfDay = mWidth / COLUMN_NUM;
+        mHalfWidthOfDay = mWidthOfDay / 2;
     }
 
     @Override
@@ -153,7 +163,7 @@ public class MonthView extends View {
         float y = mRowHeight - mTextSize / 2;
 
         for (int i = 0; i < COLUMN_NUM; i++) {
-            float x = i * mWidthOfEveryday + mHalfWidthOfEveryday;
+            float x = i * mWidthOfDay + mHalfWidthOfDay;
             int dayOfWeek = i % COLUMN_NUM;  // TODO provide method to change the first day of the week.
             String indicator = getWeekdayIndicator(dayOfWeek);
             canvas.drawText(indicator, x, y, mWeekdayIndicatorPaint);
@@ -167,7 +177,7 @@ public class MonthView extends View {
         for (int day = 1; day <= mMonthDayNum; day++) {
             int columnNum = (day + dayOffset) % 7;
             // locate every single "day"
-            float x = columnNum * mWidthOfEveryday + mHalfWidthOfEveryday;
+            float x = columnNum * mWidthOfDay + mHalfWidthOfDay;
 
             HighlightType type = mDayArray.get(day, HighlightType.NO_HIGHLIGHT);
             drawSpecificDay(canvas, type, day, x, y);
@@ -254,16 +264,16 @@ public class MonthView extends View {
         float touchX = event.getX();
         float touchY = event.getY();
 
-        float y = mRowHeight * 2 - mTextSize / 2; // start at the bottom of indicator and take the center vertical coordinate as y
+        float y = mRowHeight * 2 - mRowHeight / 2; // start at the bottom of indicator and take the center vertical coordinate as y
         int dayOffset = getDayOffset();
 
         for (int i = 1; i <= mMonthDayNum; i++) {
             int columnNum = (i + dayOffset) % 7;
-            float x = columnNum * mWidthOfEveryday + mHalfWidthOfEveryday;
+            float x = columnNum * mWidthOfDay + mHalfWidthOfDay;
             if (columnNum + 1 == COLUMN_NUM) {
                 y += mRowHeight;
             }
-            if (x - mWidthOfEveryday / 2 <= touchX && touchX <= x + mWidthOfEveryday / 2 && y - mRowHeight <= touchY && touchY <= y) {
+            if (x - mHalfWidthOfDay <= touchX && touchX <= x + mHalfWidthOfDay && y - mRowHeight / 2 <= touchY && touchY <= y + mRowHeight / 2) {
                 day = i;
             }
         }
@@ -307,6 +317,15 @@ public class MonthView extends View {
      */
     public void setCalendar(Calendar calendar) {
         mCalendar = calendar;
+    }
+
+    /**
+     * Set the day sparseArray.
+     * onDraw method is base on this array to decide whether this day should be highlighted and which style it should be highlighted.
+     * @param array a sparseArray , the key is the day, the value is the style you wanna highlight in {@link HighlightType}
+     */
+    public void setDayStyleArray(SparseArray<HighlightType> array){
+        mDayArray = array;
     }
 
     public void setOnDayClickListener(OnDayClickedListener listener) {
