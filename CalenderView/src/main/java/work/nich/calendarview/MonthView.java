@@ -1,6 +1,7 @@
 package work.nich.calendarview;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
@@ -19,31 +20,32 @@ import java.util.Calendar;
  */
 
 public class MonthView extends View {
+    private static final String TAG = MonthView.class.getSimpleName();
+
     private Paint mDayTextPaint;
     private Paint mWeekdayIndicatorPaint;
     private Paint mHighlightedDayTextPaint;
     private Paint mHighlightedCirclePaint;
     private Paint mHighlightedRingPaint;
 
-    // TODO Constants listed below should be able to set in layout XML.
     private static final int DEFAULT_DAY_HEIGHT = 40;
     private static final int DEFAULT_DAY_TEXT_SIZE = 14;
-    private static final int COMPENSATE_HEIGHT = 8;
     private static final int DEFAULT_DAY_RADIUS = 18;
+    private static final int PADDING_BOTTOM = 8;
 
     private static final int COLUMN_NUM = 7;
 
-    private String[] mDaysIndicator = {"一", "二", "三", "四", "五", "六", "日"};
+    private String[] mDaysIndicator = {"一", "二", "三", "四", "五", "六", "日"}; // TODO Day indicator should not be hardcoded.
     private SparseArray<HighlightStyle> mDayArray; // Array of storing highlight style of day;
     private OnDayClickedListener mOnDayClickedListener;
 
     private int mIndicatorColor;
-    private int mHighlightedColor;
+    private int mHighlightColor;
     private int mDayTextColor;
-    private int mHighlightedTextColor;
+    private int mHighlightTextColor;
 
     private int mRowHeight;
-    private int mCompensateHeight;
+    private int mPaddingBottom;
     private int mDayRadius; // Radius of highlighted day's circle.
     private int mTextSize;
     private int mWidth;
@@ -55,6 +57,8 @@ public class MonthView extends View {
 
     private float mWidthOfDay;
     private float mHalfWidthOfDay;
+
+    private boolean mDayClickable;
 
     private Calendar mCalendar;
 
@@ -75,20 +79,23 @@ public class MonthView extends View {
     }
 
     private void init(AttributeSet attrs) {
-        // TODO Try to get color, text size and text fonts from attrs, use default value if attrs haven't not been declared.
-
-        mRowHeight = dp2px(DEFAULT_DAY_HEIGHT);
-        mTextSize = sp2px(DEFAULT_DAY_TEXT_SIZE);
-        mCompensateHeight = dp2px(COMPENSATE_HEIGHT);
-        mDayRadius = dp2px(DEFAULT_DAY_RADIUS);
-
-        mFirstDayOfWeek = Calendar.MONDAY; // default value of start day of the week
-
         // TODO Provide day theme and night theme for switching.
-        mIndicatorColor = getResources().getColor(R.color.nc_default_indicator_text_color);
-        mHighlightedColor = getResources().getColor(R.color.nc_default_highlighted_color);
-        mDayTextColor = getResources().getColor(R.color.nc_default_day_text_color);
-        mHighlightedTextColor = getResources().getColor(R.color.nc_default_highlighted_day_text_color);
+        if (attrs != null) {
+            TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.MonthView);
+            mRowHeight = (int) a.getDimension(R.styleable.MonthView_day_height, dp2px(DEFAULT_DAY_HEIGHT));
+            mTextSize = (int) a.getDimension(R.styleable.MonthView_day_textSize, sp2px(DEFAULT_DAY_TEXT_SIZE));
+            mDayRadius = (int) a.getDimension(R.styleable.MonthView_day_radius, dp2px(DEFAULT_DAY_RADIUS));
+            mDayClickable = a.getBoolean(R.styleable.MonthView_day_clickable, false);
+
+            mIndicatorColor = a.getColor(R.styleable.MonthView_indicator_textColor, getResources().getColor(R.color.nc_default_indicator_text_color));
+            mHighlightColor = a.getColor(R.styleable.MonthView_highlight_color, getResources().getColor(R.color.nc_default_highlight_color));
+            mDayTextColor = a.getColor(R.styleable.MonthView_day_textColor, getResources().getColor(R.color.nc_default_day_text_color));
+            mHighlightTextColor = a.getColor(R.styleable.MonthView_highlight_day_textColor, getResources().getColor(R.color.nc_default_highlight_day_text_color));
+            a.recycle();
+        }
+
+        mPaddingBottom = dp2px(PADDING_BOTTOM);
+        mFirstDayOfWeek = Calendar.MONDAY; // default value of start day of the week
     }
 
     private void initPaint() {
@@ -103,7 +110,7 @@ public class MonthView extends View {
         mHighlightedRingPaint = new Paint();
         mHighlightedRingPaint.setAntiAlias(true);
         mHighlightedRingPaint.setStyle(Paint.Style.STROKE);
-        mHighlightedRingPaint.setColor(mHighlightedColor);
+        mHighlightedRingPaint.setColor(mHighlightColor);
 
         mDayTextPaint = new Paint();
         mDayTextPaint.setAntiAlias(true);
@@ -116,13 +123,13 @@ public class MonthView extends View {
         mHighlightedDayTextPaint.setAntiAlias(true);
         mHighlightedDayTextPaint.setStyle(Paint.Style.FILL);
         mHighlightedDayTextPaint.setTextSize(mTextSize);
-        mHighlightedDayTextPaint.setColor(mHighlightedTextColor);
+        mHighlightedDayTextPaint.setColor(mHighlightTextColor);
         mHighlightedDayTextPaint.setTextAlign(Paint.Align.CENTER);
 
         mHighlightedCirclePaint = new Paint();
         mHighlightedCirclePaint.setAntiAlias(true);
         mHighlightedCirclePaint.setStyle(Paint.Style.FILL);
-        mHighlightedCirclePaint.setColor(mHighlightedColor);
+        mHighlightedCirclePaint.setColor(mHighlightColor);
     }
 
     @Override
@@ -138,11 +145,14 @@ public class MonthView extends View {
 
         mMonthDayNum = mCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
         mRowNum = (int) Math.ceil((float) (getDayOffset() + 1 + mMonthDayNum) / (float) COLUMN_NUM);
+        if (getDayOffset() + 1 != COLUMN_NUM) { // getDayOffset() + 1 == COLUMN_NUM means first day of week is simply first day of month.
+            mRowNum = (int) Math.ceil((float) (getDayOffset() + 1 + mMonthDayNum) / (float) COLUMN_NUM) + 1;
+        }
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mRowHeight * mRowNum + mCompensateHeight);
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mRowHeight * mRowNum + mPaddingBottom);
     }
 
     @Override
@@ -241,12 +251,14 @@ public class MonthView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_UP:
-                int day = locateClickedDay(event);
-                if (0 <= day) {
-                    highlightDay(day);
+                if (mDayClickable) {
+                    int day = locateClickedDay(event);
+                    if (0 <= day) {
+                        highlightDay(day);
 
-                    if (mOnDayClickedListener != null) {
-                        mOnDayClickedListener.onDayClicked(day);
+                        if (mOnDayClickedListener != null) {
+                            mOnDayClickedListener.onDayClicked(day);
+                        }
                     }
                 }
                 break;
@@ -330,6 +342,10 @@ public class MonthView extends View {
 
     public void setOnDayClickListener(OnDayClickedListener listener) {
         this.mOnDayClickedListener = listener;
+    }
+
+    public void setDayClickable(boolean clickable){
+        mDayClickable = clickable;
     }
 
     private String getWeekdayIndicator(int dayOfWeek) {
