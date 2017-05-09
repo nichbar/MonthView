@@ -270,11 +270,11 @@ public class MonthView extends View {
         for (int i = 1; i <= mMonthDayNum; i++) {
             int columnNum = (i + dayOffset) % 7;
             float x = columnNum * mWidthOfDay + mHalfWidthOfDay;
-            if (columnNum + 1 == COLUMN_NUM) {
-                y += mRowHeight;
-            }
             if (x - mHalfWidthOfDay <= touchX && touchX <= x + mHalfWidthOfDay && y - mRowHeight / 2 <= touchY && touchY <= y + mRowHeight / 2) {
                 day = i;
+            }
+            if (columnNum + 1 == COLUMN_NUM) {
+                y += mRowHeight;
             }
         }
         return day;
