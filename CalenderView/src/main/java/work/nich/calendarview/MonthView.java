@@ -55,18 +55,20 @@ public class MonthView extends View {
     private int mTextSize;
 
     private int mFirstDayOfWeek;
-    private int mMonthDayNum;
-    private int mPreMonthDayNum;
+    private int mMonthDayCount;
+    private int mPreMonthDayCount;
     private int mToday;
     private int mDayOffset;
 
     private float mWidthOfDay;
     private float mHalfWidthOfDay;
 
+    private float mLastDayCoordinateY;
+    private int mLastDayColumn;
+
     private boolean mDayClickable;
 
     private Calendar mCalendar; // calendar of this month
-    private Calendar mPreCalendar; // calendar of previous month
 
     public MonthView(Context context) {
         this(context, null);
@@ -103,7 +105,10 @@ public class MonthView extends View {
 
         mPaddingBottom = dp2px(PADDING_BOTTOM);
         mIndicatorHeight = dp2px(DEFAULT_INDICATOR_HEIGHT);
-        mFirstDayOfWeek = Calendar.MONDAY; // default value of start day of the week
+        mFirstDayOfWeek = Calendar.MONDAY; // Default value of start day of the week.
+
+        mDayArray = new SparseArray<>();
+        setCalendar(Calendar.getInstance()); // Use current day to get a calendar instance by default.
     }
 
     private void initPaint() {
@@ -148,24 +153,6 @@ public class MonthView extends View {
     }
 
     @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-
-        if (mCalendar == null) {
-            mCalendar = Calendar.getInstance();
-        }
-        if (mDayArray == null) {
-            mDayArray = new SparseArray<>();
-        }
-
-        mPreCalendar = (Calendar) mCalendar.clone();
-        mPreCalendar.add(Calendar.MONTH, -1);
-        mDayOffset = getDayOffset();
-        mMonthDayNum = mCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        mPreMonthDayNum = mPreCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-    }
-
-    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mIndicatorHeight + mRowHeight * ROW_NUM + mPaddingBottom);
     }
@@ -196,12 +183,13 @@ public class MonthView extends View {
     }
 
     private void drawDays(Canvas canvas) {
+        float x = 0;
         float y = mIndicatorHeight + mRowHeight - mTextSize / 2; // start at the bottom of indicator and take the center vertical coordinate as y
+        int columnNum = 0;
 
-        for (int day = 1; day <= mMonthDayNum; day++) {
-            int columnNum = (day + mDayOffset) % 7;
-            // locate every single "day"
-            float x = columnNum * mWidthOfDay + mHalfWidthOfDay;
+        for (int day = 1; day <= mMonthDayCount; day++) {
+            columnNum = (day + mDayOffset) % 7;
+            x = columnNum * mWidthOfDay + mHalfWidthOfDay;
 
             HighlightStyle style = mDayArray.get(day, HighlightStyle.NO_HIGHLIGHT);
             drawSpecificDay(canvas, style, day, x, y);
@@ -210,6 +198,9 @@ public class MonthView extends View {
                 y += mRowHeight;
             }
         }
+
+        mLastDayCoordinateY = y;
+        mLastDayColumn = columnNum;
     }
 
     /**
@@ -272,11 +263,30 @@ public class MonthView extends View {
     }
 
     private void drawHintDaysInPreviousMonth(Canvas canvas) {
-        // TODO draw in details
+        float y = mIndicatorHeight + mRowHeight - mTextSize / 2;
+
+        for (int day = mPreMonthDayCount, offset = mDayOffset; day > 0; day--, offset--) {
+            float x = offset * mWidthOfDay + mHalfWidthOfDay;
+            drawDayText(canvas, day, x, y, mHintDayTextPaint);
+        }
     }
 
     private void drawHintDaysInNextMonth(Canvas canvas) {
-        // TODO draw in details
+        float x;
+        float y = mLastDayCoordinateY;
+        int bottom = getBottom();
+        float columnNum = mLastDayColumn + 1 >= COLUMN_NUM ? 0 : mLastDayColumn + 1;
+
+        for (int day = 1; day <= 14; day++) {
+            x = columnNum * mWidthOfDay + mHalfWidthOfDay;
+            drawDayText(canvas, day, x, y, mHintDayTextPaint);
+            columnNum++;
+            if (columnNum >= COLUMN_NUM) {
+                y += mRowHeight;
+                columnNum = 0;
+            }
+            if (y >= bottom) break;
+        }
     }
 
     @Override
@@ -310,7 +320,7 @@ public class MonthView extends View {
 
         float y = mRowHeight * 2 - mRowHeight / 2; // start at the bottom of indicator and take the center vertical coordinate as y
 
-        for (int i = 1; i <= mMonthDayNum; i++) {
+        for (int i = 1; i <= mMonthDayCount; i++) {
             int columnNum = (i + mDayOffset) % 7;
             float x = columnNum * mWidthOfDay + mHalfWidthOfDay;
             if (x - mHalfWidthOfDay <= touchX && touchX <= x + mHalfWidthOfDay && y - mRowHeight / 2 <= touchY && touchY <= y + mRowHeight / 2) {
@@ -359,7 +369,17 @@ public class MonthView extends View {
      * @param calendar the calendar you want this MonthView to show.
      */
     public void setCalendar(Calendar calendar) {
-        mCalendar = calendar;
+        if (mCalendar != calendar) {
+            mCalendar = calendar;
+
+            Calendar preCalendar = (Calendar) mCalendar.clone();
+            preCalendar.add(Calendar.MONTH, -1);
+            mDayOffset = getDayOffset();
+            mMonthDayCount = mCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+            mPreMonthDayCount = preCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+
+            postInvalidate();
+        }
     }
 
     /**
