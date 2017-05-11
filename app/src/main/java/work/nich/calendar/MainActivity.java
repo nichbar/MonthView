@@ -32,5 +32,6 @@ public class MainActivity extends Activity {
 
         monthView.setCalendar(calendar);
         monthView.setDayStyleArray(array);
+        monthView.setMode(MonthView.Mode.SINGLE_CHOICE);
     }
 }

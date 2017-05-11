@@ -67,6 +67,7 @@ public class MonthView extends View {
     private int mLastDayColumn;
 
     private boolean mDayClickable;
+    private Mode mMode;
 
     private Calendar mCalendar; // calendar of this month
 
@@ -396,6 +397,18 @@ public class MonthView extends View {
         this.mOnDayClickedListener = listener;
     }
 
+    /**
+     * Set the mode of this MonthView.
+     * Display only, single choice and multiple choice is available.
+     *
+     * @param mode DISPLAY_ONLY, SINGLE_CHOICE, MULTIPLE_CHOICE
+     */
+    public void setMode(Mode mode){
+        mMode = mode;
+
+        // TODO complete mode function.
+    }
+
     public void setDayClickable(boolean clickable) {
         mDayClickable = clickable;
     }
@@ -418,5 +431,9 @@ public class MonthView extends View {
      */
     public interface OnDayClickedListener {
         void onDayClicked(int day);
+    }
+
+    public enum Mode {
+        DISPLAY_ONLY, SINGLE_CHOICE, MULTIPLE_CHOICE
     }
 }
