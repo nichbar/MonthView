@@ -26,9 +26,9 @@ public class MainActivity extends Activity {
     private void init() {
         MonthView monthView = (MonthView) findViewById(R.id.view_month);
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.MONTH, Calendar.JANUARY);
+        calendar.set(Calendar.MONTH, Calendar.MAY);
         SparseArray<HighlightStyle> array = new SparseArray<>();
-        array.append(13, HighlightStyle.BOTTOM_SEMICIRCLE);
+        array.append(13, HighlightStyle.RING_ONLY);
 
         monthView.setCalendar(calendar);
         monthView.setDayStyleArray(array);

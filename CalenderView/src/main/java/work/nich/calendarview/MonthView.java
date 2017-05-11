@@ -23,17 +23,20 @@ public class MonthView extends View {
     private static final String TAG = MonthView.class.getSimpleName();
 
     private Paint mDayTextPaint;
+    private Paint mHintDayTextPaint;
     private Paint mWeekdayIndicatorPaint;
     private Paint mHighlightedDayTextPaint;
     private Paint mHighlightedCirclePaint;
     private Paint mHighlightedRingPaint;
 
+    private static final int DEFAULT_INDICATOR_HEIGHT = 30;
     private static final int DEFAULT_DAY_HEIGHT = 40;
     private static final int DEFAULT_DAY_TEXT_SIZE = 14;
     private static final int DEFAULT_DAY_RADIUS = 18;
     private static final int PADDING_BOTTOM = 8;
 
     private static final int COLUMN_NUM = 7;
+    private static final int ROW_NUM = 6;
 
     private String[] mDaysIndicator = {"一", "二", "三", "四", "五", "六", "日"}; // TODO Day indicator should not be hardcoded.
     private SparseArray<HighlightStyle> mDayArray; // Array of storing highlight style of day;
@@ -43,24 +46,27 @@ public class MonthView extends View {
     private int mHighlightColor;
     private int mDayTextColor;
     private int mHighlightTextColor;
+    private int mHintDayTextColor;
 
+    private int mIndicatorHeight;
     private int mRowHeight;
     private int mPaddingBottom;
     private int mDayRadius; // Radius of highlighted day's circle.
     private int mTextSize;
-    private int mWidth;
 
     private int mFirstDayOfWeek;
     private int mMonthDayNum;
-    private int mRowNum; // the row number of Month
+    private int mPreMonthDayNum;
     private int mToday;
+    private int mDayOffset;
 
     private float mWidthOfDay;
     private float mHalfWidthOfDay;
 
     private boolean mDayClickable;
 
-    private Calendar mCalendar;
+    private Calendar mCalendar; // calendar of this month
+    private Calendar mPreCalendar; // calendar of previous month
 
     public MonthView(Context context) {
         this(context, null);
@@ -90,11 +96,13 @@ public class MonthView extends View {
             mIndicatorColor = a.getColor(R.styleable.MonthView_indicator_textColor, getResources().getColor(R.color.nc_default_indicator_text_color));
             mHighlightColor = a.getColor(R.styleable.MonthView_highlight_color, getResources().getColor(R.color.nc_default_highlight_color));
             mDayTextColor = a.getColor(R.styleable.MonthView_day_textColor, getResources().getColor(R.color.nc_default_day_text_color));
+            mHintDayTextColor = a.getColor(R.styleable.MonthView_hint_day_textColor, getResources().getColor(R.color.nc_default_hint_day_text_color));
             mHighlightTextColor = a.getColor(R.styleable.MonthView_highlight_day_textColor, getResources().getColor(R.color.nc_default_highlight_day_text_color));
             a.recycle();
         }
 
         mPaddingBottom = dp2px(PADDING_BOTTOM);
+        mIndicatorHeight = dp2px(DEFAULT_INDICATOR_HEIGHT);
         mFirstDayOfWeek = Calendar.MONDAY; // default value of start day of the week
     }
 
@@ -119,6 +127,13 @@ public class MonthView extends View {
         mDayTextPaint.setTextSize(mTextSize);
         mDayTextPaint.setTextAlign(Paint.Align.CENTER);
 
+        mHintDayTextPaint = new Paint();
+        mHintDayTextPaint.setAntiAlias(true);
+        mHintDayTextPaint.setColor(mHintDayTextColor);
+        mHintDayTextPaint.setStyle(Paint.Style.FILL);
+        mHintDayTextPaint.setTextSize(mTextSize);
+        mHintDayTextPaint.setTextAlign(Paint.Align.CENTER);
+
         mHighlightedDayTextPaint = new Paint();
         mHighlightedDayTextPaint.setAntiAlias(true);
         mHighlightedDayTextPaint.setStyle(Paint.Style.FILL);
@@ -139,38 +154,38 @@ public class MonthView extends View {
         if (mCalendar == null) {
             mCalendar = Calendar.getInstance();
         }
-        if (mDayArray == null){
+        if (mDayArray == null) {
             mDayArray = new SparseArray<>();
         }
 
+        mPreCalendar = (Calendar) mCalendar.clone();
+        mPreCalendar.add(Calendar.MONTH, -1);
+        mDayOffset = getDayOffset();
         mMonthDayNum = mCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        mRowNum = (int) Math.ceil((float) (getDayOffset() + 1 + mMonthDayNum) / (float) COLUMN_NUM);
-        if (getDayOffset() + 1 != COLUMN_NUM) { // getDayOffset() + 1 == COLUMN_NUM means first day of week is simply first day of month.
-            mRowNum = (int) Math.ceil((float) (getDayOffset() + 1 + mMonthDayNum) / (float) COLUMN_NUM) + 1;
-        }
+        mPreMonthDayNum = mPreCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mRowHeight * mRowNum + mPaddingBottom);
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), mIndicatorHeight + mRowHeight * ROW_NUM + mPaddingBottom);
     }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        mWidth = w;
         // initial the width of every "day"
-        mWidthOfDay = mWidth / COLUMN_NUM;
+        mWidthOfDay = w / COLUMN_NUM;
         mHalfWidthOfDay = mWidthOfDay / 2;
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         drawWeekdayIndicator(canvas);
-        drawDay(canvas);
+        drawDays(canvas);
+        drawHintDays(canvas);
     }
 
     private void drawWeekdayIndicator(Canvas canvas) {
-        float y = mRowHeight - mTextSize / 2;
+        float y = mIndicatorHeight - mTextSize / 2;
 
         for (int i = 0; i < COLUMN_NUM; i++) {
             float x = i * mWidthOfDay + mHalfWidthOfDay;
@@ -180,12 +195,11 @@ public class MonthView extends View {
         }
     }
 
-    private void drawDay(Canvas canvas) {
-        float y = mRowHeight * 2 - mTextSize / 2; // start at the bottom of indicator and take the center vertical coordinate as y
-        int dayOffset = getDayOffset();
+    private void drawDays(Canvas canvas) {
+        float y = mIndicatorHeight + mRowHeight - mTextSize / 2; // start at the bottom of indicator and take the center vertical coordinate as y
 
         for (int day = 1; day <= mMonthDayNum; day++) {
-            int columnNum = (day + dayOffset) % 7;
+            int columnNum = (day + mDayOffset) % 7;
             // locate every single "day"
             float x = columnNum * mWidthOfDay + mHalfWidthOfDay;
 
@@ -203,7 +217,7 @@ public class MonthView extends View {
      * You can draw your own day in different highlighted style by overriding this method.
      *
      * @param canvas just the canvas you want
-     * @param style   the style of highlight style
+     * @param style  the style of highlight style
      * @param day    the day you wanna draw
      * @param x      x-coordinate of this day (center)
      * @param y      y-coordinate of this day (center)
@@ -247,6 +261,24 @@ public class MonthView extends View {
         canvas.drawCircle(cx, cy, radius, paint);
     }
 
+    /**
+     * Draw days that belonging to previous month and next month.
+     */
+    private void drawHintDays(Canvas canvas) {
+        if (mDayOffset != 6){ // When mDayOffset equals 6 means the 1st day of this month is the 1st day of the 1st week.
+            drawHintDaysInPreviousMonth(canvas);
+        }
+        drawHintDaysInNextMonth(canvas);
+    }
+
+    private void drawHintDaysInPreviousMonth(Canvas canvas) {
+        // TODO draw in details
+    }
+
+    private void drawHintDaysInNextMonth(Canvas canvas) {
+        // TODO draw in details
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
@@ -277,10 +309,9 @@ public class MonthView extends View {
         float touchY = event.getY();
 
         float y = mRowHeight * 2 - mRowHeight / 2; // start at the bottom of indicator and take the center vertical coordinate as y
-        int dayOffset = getDayOffset();
 
         for (int i = 1; i <= mMonthDayNum; i++) {
-            int columnNum = (i + dayOffset) % 7;
+            int columnNum = (i + mDayOffset) % 7;
             float x = columnNum * mWidthOfDay + mHalfWidthOfDay;
             if (x - mHalfWidthOfDay <= touchX && touchX <= x + mHalfWidthOfDay && y - mRowHeight / 2 <= touchY && touchY <= y + mRowHeight / 2) {
                 day = i;
@@ -334,9 +365,10 @@ public class MonthView extends View {
     /**
      * Set the day sparseArray.
      * onDraw method is base on this array to decide whether this day should be highlighted and which style it should be highlighted.
+     *
      * @param array a sparseArray , the key is the day, the value is the style you wanna highlight in {@link HighlightStyle}
      */
-    public void setDayStyleArray(SparseArray<HighlightStyle> array){
+    public void setDayStyleArray(SparseArray<HighlightStyle> array) {
         mDayArray = array;
     }
 
@@ -344,7 +376,7 @@ public class MonthView extends View {
         this.mOnDayClickedListener = listener;
     }
 
-    public void setDayClickable(boolean clickable){
+    public void setDayClickable(boolean clickable) {
         mDayClickable = clickable;
     }
 
