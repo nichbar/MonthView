@@ -385,6 +385,11 @@ public class MonthView extends View {
         }
     }
 
+    /**
+     * Get days that the user selected as a int array.
+     *
+     * @return selected days.
+     */
     public int[] getSelectedDays() {
         ArrayList<Integer> mSelectedDays = new ArrayList<>();
         for (int i = 1; i <= 31; i++) {
