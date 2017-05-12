@@ -7,8 +7,7 @@
         android:id="@+id/view_month"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:day_height="30dp"
+        app:day_height="35dp"
         app:day_radius="16dp"
-        app:day_textSize="12sp"
-        app:day_clickable="false" />
+        app:day_textSize="12sp" />
 </LinearLayout>

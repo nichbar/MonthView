@@ -11,6 +11,7 @@ import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 
 /**
@@ -67,8 +68,8 @@ public class MonthView extends View {
     private int mLastDayColumn;
 
     private boolean mDayClickable;
-    private Mode mMode;
 
+    private Mode mMode;
     private Calendar mCalendar; // calendar of this month
 
     public MonthView(Context context) {
@@ -94,7 +95,7 @@ public class MonthView extends View {
             mRowHeight = (int) a.getDimension(R.styleable.MonthView_day_height, dp2px(DEFAULT_DAY_HEIGHT));
             mTextSize = (int) a.getDimension(R.styleable.MonthView_day_textSize, sp2px(DEFAULT_DAY_TEXT_SIZE));
             mDayRadius = (int) a.getDimension(R.styleable.MonthView_day_radius, dp2px(DEFAULT_DAY_RADIUS));
-            mDayClickable = a.getBoolean(R.styleable.MonthView_day_clickable, false);
+            mDayClickable = a.getBoolean(R.styleable.MonthView_day_clickable, true);
 
             mIndicatorColor = a.getColor(R.styleable.MonthView_indicator_textColor, getResources().getColor(R.color.nc_default_indicator_text_color));
             mHighlightColor = a.getColor(R.styleable.MonthView_highlight_color, getResources().getColor(R.color.nc_default_highlight_color));
@@ -108,6 +109,7 @@ public class MonthView extends View {
         mIndicatorHeight = dp2px(DEFAULT_INDICATOR_HEIGHT);
         mFirstDayOfWeek = Calendar.MONDAY; // Default value of start day of the week.
 
+        mMode = Mode.DISPLAY_ONLY;
         mDayArray = new SparseArray<>();
         setCalendar(Calendar.getInstance()); // Use current day to get a calendar instance by default.
     }
@@ -297,9 +299,9 @@ public class MonthView extends View {
                 if (mDayClickable) {
                     int day = locateClickedDay(event);
                     if (0 <= day) {
-                        highlightDay(day);
-
-                        if (mOnDayClickedListener != null) {
+                        if (mMode == Mode.SELECT) {
+                            highlightDay(day);
+                        } else if (mOnDayClickedListener != null) {
                             mOnDayClickedListener.onDayClicked(day);
                         }
                     }
@@ -383,6 +385,20 @@ public class MonthView extends View {
         }
     }
 
+    public int[] getSelectedDays() {
+        ArrayList<Integer> mSelectedDays = new ArrayList<>();
+        for (int i = 1; i <= 31; i++) {
+            if (mDayArray.get(i, HighlightStyle.NO_HIGHLIGHT) != HighlightStyle.NO_HIGHLIGHT) {
+                mSelectedDays.add(i);
+            }
+        }
+        int[] selectedDays = new int[mSelectedDays.size()];
+        for (int i = 0; i < mSelectedDays.size(); i++) {
+            selectedDays[i] = mSelectedDays.get(i);
+        }
+        return selectedDays;
+    }
+
     /**
      * Set the day sparseArray.
      * onDraw method is base on this array to decide whether this day should be highlighted and which style it should be highlighted.
@@ -397,16 +413,8 @@ public class MonthView extends View {
         this.mOnDayClickedListener = listener;
     }
 
-    /**
-     * Set the mode of this MonthView.
-     * Display only, single choice and multiple choice is available.
-     *
-     * @param mode DISPLAY_ONLY, SINGLE_CHOICE, MULTIPLE_CHOICE
-     */
     public void setMode(Mode mode){
         mMode = mode;
-
-        // TODO complete mode function.
     }
 
     public void setDayClickable(boolean clickable) {
@@ -433,7 +441,13 @@ public class MonthView extends View {
         void onDayClicked(int day);
     }
 
+    /**
+     * In DISPLAY_ONLY mode you can only set a {@link OnDayClickedListener} by {@link #setOnDayClickListener(OnDayClickedListener)}
+     * and do whatever you what in onDayClicked(day) callback.
+     *
+     * In SELECT mode you can call {@link #getSelectedDays()} to get user's selection.
+     */
     public enum Mode {
-        DISPLAY_ONLY, SINGLE_CHOICE, MULTIPLE_CHOICE
+        DISPLAY_ONLY, SELECT
     }
 }

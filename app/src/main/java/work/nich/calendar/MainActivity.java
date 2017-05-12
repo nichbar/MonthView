@@ -3,7 +3,10 @@ package work.nich.calendar;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.SparseArray;
+import android.view.View;
+import android.widget.Toast;
 
+import java.util.Arrays;
 import java.util.Calendar;
 
 import work.nich.calendarview.HighlightStyle;
@@ -15,6 +18,8 @@ import work.nich.calendarview.MonthView;
  */
 
 public class MainActivity extends Activity {
+    MonthView mMonthView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,14 +29,20 @@ public class MainActivity extends Activity {
     }
 
     private void init() {
-        MonthView monthView = (MonthView) findViewById(R.id.view_month);
+        mMonthView = (MonthView) findViewById(R.id.view_month);
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.MONTH, Calendar.MAY);
         SparseArray<HighlightStyle> array = new SparseArray<>();
-        array.append(13, HighlightStyle.RING_ONLY);
+        array.append(12, HighlightStyle.SOLID_CIRCLE);
 
-        monthView.setCalendar(calendar);
-        monthView.setDayStyleArray(array);
-        monthView.setMode(MonthView.Mode.SINGLE_CHOICE);
+        mMonthView.setCalendar(calendar);
+        mMonthView.setDayStyleArray(array);
+        mMonthView.setMode(MonthView.Mode.DISPLAY_ONLY);
+        mMonthView.setOnDayClickListener(new MonthView.OnDayClickedListener() {
+            @Override
+            public void onDayClicked(int day) {
+                Toast.makeText(MainActivity.this, Integer.toString(day), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
