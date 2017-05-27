@@ -42,6 +42,7 @@ public class MonthView extends View {
     private String[] mDaysIndicator = {"一", "二", "三", "四", "五", "六", "日"}; // TODO Day indicator should not be hardcoded.
     private SparseArray<HighlightStyle> mDayArray; // Array of storing highlight style of day;
     private OnDayClickedListener mOnDayClickedListener;
+    private OnDaySelectedListener mOnDaySelectedListener;
 
     private int mIndicatorColor;
     private int mHighlightColor;
@@ -301,8 +302,8 @@ public class MonthView extends View {
                     if (0 <= day) {
                         if (mMode == Mode.SELECT) {
                             highlightDay(day);
-                        } else if (mOnDayClickedListener != null) {
-                            mOnDayClickedListener.onDayClicked(day);
+                        } else if (mMode == Mode.DISPLAY_ONLY) {
+                            makeClickCallback(day);
                         }
                     }
                 }
@@ -337,19 +338,34 @@ public class MonthView extends View {
     }
 
     private void toggleHighlight(int i) {
-        if (mDayArray.get(i, HighlightStyle.NO_HIGHLIGHT) == HighlightStyle.NO_HIGHLIGHT) {
+        boolean isActionOn = mDayArray.get(i, HighlightStyle.NO_HIGHLIGHT) == HighlightStyle.NO_HIGHLIGHT;
+        if (isActionOn) {
             mDayArray.append(i, HighlightStyle.SOLID_CIRCLE);
         } else {
             mDayArray.append(i, HighlightStyle.NO_HIGHLIGHT);
         }
+
+        if (mMode == Mode.SELECT) {
+            makeSelectCallback(i, isActionOn);
+        }
     }
 
-    private int getDayOfMonth() {
-        if (mToday == 0) {
-            Calendar cal = Calendar.getInstance();
-            mToday = cal.get(Calendar.DAY_OF_MONTH);
+    private void makeSelectCallback(int i, boolean isActionOn) {
+        if (mOnDaySelectedListener == null)
+            return;
+
+        if (isActionOn) {
+            mOnDaySelectedListener.onDayJustSelected(i);
+        } else {
+            mOnDaySelectedListener.onDayJustDeselected(i);
         }
-        return mToday;
+    }
+
+    private void makeClickCallback(int day) {
+        if (mOnDayClickedListener != null) {
+        } else {
+            mOnDayClickedListener.onDayClicked(day);
+        }
     }
 
     private int getDayOffset() {
@@ -418,6 +434,10 @@ public class MonthView extends View {
         this.mOnDayClickedListener = listener;
     }
 
+    public void setOnDaySelectListener(OnDaySelectedListener listener){
+        this.mOnDaySelectedListener = listener;
+    }
+
     public void setMode(Mode mode){
         mMode = mode;
     }
@@ -439,11 +459,23 @@ public class MonthView extends View {
     }
 
     /**
-     * Listener of every single "day".
-     * You may use setOnDayClickListener and listen to click(touch exactly) event over every single "day".
+     * Listener of every single "day". It works only in {@link Mode.DISPLAY_ONLY} mode.
+     * You may use {@link #setOnDayClickListener(OnDayClickedListener)} and listen to click(touch exactly) event over every single "day".
      */
+    @SuppressWarnings("JavadocReference")
     public interface OnDayClickedListener {
         void onDayClicked(int day);
+    }
+
+    /**
+     * Listener of selected days.It works only in {@link Mode.SELECT} mode.
+     * You may use {@link #setOnDaySelectListener(OnDaySelectedListener)} and listen to select and deselect action over every single "day".
+     */
+    @SuppressWarnings("JavadocReference")
+    public interface OnDaySelectedListener {
+        void onDayJustSelected(int day);
+
+        void onDayJustDeselected(int day);
     }
 
     /**
