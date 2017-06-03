@@ -60,7 +60,6 @@ public class MonthView extends View {
     private int mFirstDayOfWeek;
     private int mMonthDayCount;
     private int mPreMonthDayCount;
-    private int mToday;
     private int mDayOffset;
 
     private float mWidthOfDay;
@@ -90,8 +89,8 @@ public class MonthView extends View {
         initPaint();
     }
 
+    // TODO Let the value listed below can be set by users.
     private void init(AttributeSet attrs) {
-        // TODO Provide day theme and night theme for switching.
         if (attrs != null) {
             TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.MonthView);
             mRowHeight = (int) a.getDimension(R.styleable.MonthView_day_height, dp2px(DEFAULT_DAY_HEIGHT));
