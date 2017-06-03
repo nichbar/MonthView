@@ -8,7 +8,7 @@
 
         <attr name="day_textColor" format="color" />
         <attr name="hint_day_textColor" format="color"/>
-        <attr name="indicator_textColor" format="color" />
+        <attr name="weekday_textColor" format="color" />
         <attr name="highlight_day_textColor" format="color" />
         <attr name="highlight_color" format="color" />
     </declare-styleable>

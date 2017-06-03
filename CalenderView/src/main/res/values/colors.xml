@@ -2,7 +2,7 @@
 <resources>
     <color name="nc_default_day_text_color">#333333</color>
     <color name="nc_default_highlight_day_text_color">#1e89ff</color>
-    <color name="nc_default_indicator_text_color">#666666</color>
+    <color name="nc_default_weekday_text_color">#666666</color>
     <color name="nc_default_highlight_color">#bfdfff</color>
     <color name="nc_default_hint_day_text_color">#999999</color>
 </resources>
