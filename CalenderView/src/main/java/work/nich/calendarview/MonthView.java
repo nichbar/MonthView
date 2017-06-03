@@ -373,7 +373,6 @@ public class MonthView extends View {
 
     private void makeClickCallback(int day) {
         if (mOnDayClickedListener != null) {
-        } else {
             mOnDayClickedListener.onDayClicked(day);
         }
     }
