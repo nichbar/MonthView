@@ -13,6 +13,7 @@ import android.view.View;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Locale;
 
 /**
  * MonthView
@@ -39,7 +40,7 @@ public class MonthView extends View {
     private static final int COLUMN_NUM = 7;
     private static final int ROW_NUM = 6;
 
-    private String[] mDaysIndicator = {"一", "二", "三", "四", "五", "六", "日"}; // TODO Day indicator should not be hardcoded.
+    private String[] mWeekdayName;
     private SparseArray<HighlightStyle> mDayArray; // Array of storing highlight style of day;
     private OnDayClickedListener mOnDayClickedListener;
     private OnDaySelectedListener mOnDaySelectedListener;
@@ -105,7 +106,16 @@ public class MonthView extends View {
             mHighlightTextColor = a.getColor(R.styleable.MonthView_highlight_day_textColor, getResources().getColor(R.color.nc_default_highlight_day_text_color));
             a.recycle();
         }
-
+    
+        Locale chineseLocale = new Locale("zh");
+        Locale currentLocale = Locale.getDefault();
+        boolean isChineseUser = currentLocale.getLanguage().equals(chineseLocale.getLanguage());
+        if (isChineseUser){
+            mWeekdayName = getContext().getResources().getStringArray(R.array.monday_first_chinese_weekday_name);
+        }else {
+            mWeekdayName = getContext().getResources().getStringArray(R.array.monday_first_english_weekday_name);
+        }
+        
         mPaddingBottom = dp2px(PADDING_BOTTOM);
         mIndicatorHeight = dp2px(DEFAULT_INDICATOR_HEIGHT);
         mFirstDayOfWeek = Calendar.MONDAY; // Default value of start day of the week.
@@ -181,7 +191,7 @@ public class MonthView extends View {
         for (int i = 0; i < COLUMN_NUM; i++) {
             float x = i * mWidthOfDay + mHalfWidthOfDay;
             int dayOfWeek = i % COLUMN_NUM;  // TODO provide method to change the first day of the week.
-            String indicator = getWeekdayIndicator(dayOfWeek);
+            String indicator = getWeekdayName(dayOfWeek);
             canvas.drawText(indicator, x, y, mWeekdayIndicatorPaint);
         }
     }
@@ -446,8 +456,8 @@ public class MonthView extends View {
         mDayClickable = clickable;
     }
 
-    private String getWeekdayIndicator(int dayOfWeek) {
-        return mDaysIndicator[dayOfWeek];
+    private String getWeekdayName(int dayOfWeek) {
+        return mWeekdayName[dayOfWeek];
     }
 
     private int dp2px(int dp) {
