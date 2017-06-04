@@ -70,6 +70,7 @@ public class MonthView extends View {
     private int mLastDayColumn;
 
     private boolean mDayClickable;
+    private boolean mDisplayHintDays;
 
     private Mode mMode;
     private Calendar mCalendar; // calendar of this month
@@ -112,6 +113,7 @@ public class MonthView extends View {
         setFirstDayOfWeek(Calendar.MONDAY);
 
         mMode = Mode.DISPLAY_ONLY;
+        mDisplayHintDays = true;
         mDayArray = new SparseArray<>();
         setCalendar(Calendar.getInstance()); // Use current day to get a calendar instance by default.
     }
@@ -173,7 +175,7 @@ public class MonthView extends View {
     protected void onDraw(Canvas canvas) {
         drawWeekdayText(canvas);
         drawDays(canvas);
-        drawHintDays(canvas);
+        if (mDisplayHintDays) drawHintDays(canvas);
     }
 
     private void drawWeekdayText(Canvas canvas) {
@@ -493,6 +495,18 @@ public class MonthView extends View {
      */
     public void setDayClickable(boolean clickable) {
         mDayClickable = clickable;
+    }
+    
+    // TODO ReMeasure when there's a blank row.
+    /**
+     * Decide whether display hint days from previous and next month.
+     * @param visible display or not display
+     */
+    public void setDisplayHintDays(boolean visible) {
+        if (mDisplayHintDays != visible){
+            mDisplayHintDays = visible;
+            postInvalidate();
+        }
     }
 
     private String getWeekdayName(int dayOfWeek) {
