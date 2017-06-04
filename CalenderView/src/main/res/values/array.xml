@@ -7,7 +7,7 @@
         <item>四</item>
         <item>五</item>
         <item>六</item>
-        <item>七</item>
+        <item>日</item>
     </string-array>
 
     <string-array name="monday_first_english_weekday_name">
@@ -20,7 +20,7 @@
         <item>SUN</item>
     </string-array>
 
-    <string-array name="sunday_first_weekday_name">
+    <string-array name="sunday_first_english_weekday_name">
         <item>SUN</item>
         <item>MON</item>
         <item>TUE</item>
@@ -28,5 +28,15 @@
         <item>THU</item>
         <item>FRI</item>
         <item>SAT</item>
+    </string-array>
+
+    <string-array name="sunday_first_chinese_weekday_name">
+        <item>日</item>
+        <item>一</item>
+        <item>二</item>
+        <item>三</item>
+        <item>四</item>
+        <item>五</item>
+        <item>六</item>
     </string-array>
 </resources>

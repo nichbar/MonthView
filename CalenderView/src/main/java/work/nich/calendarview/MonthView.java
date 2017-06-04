@@ -1,6 +1,7 @@
 package work.nich.calendarview;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -105,19 +106,10 @@ public class MonthView extends View {
             mHighlightTextColor = a.getColor(R.styleable.MonthView_highlight_day_textColor, getResources().getColor(R.color.nc_default_highlight_day_text_color));
             a.recycle();
         }
-    
-        Locale chineseLocale = new Locale("zh");
-        Locale currentLocale = Locale.getDefault();
-        boolean isChineseUser = currentLocale.getLanguage().equals(chineseLocale.getLanguage());
-        if (isChineseUser) {
-            mWeekdayName = getContext().getResources().getStringArray(R.array.monday_first_chinese_weekday_name);
-        } else {
-            mWeekdayName = getContext().getResources().getStringArray(R.array.monday_first_english_weekday_name);
-        }
         
         mPaddingBottom = dp2px(PADDING_BOTTOM);
         mWeekdayHeight = dp2px(DEFAULT_WEEKDAY_HEIGHT);
-        mFirstDayOfWeek = Calendar.MONDAY; // Default value of start day of the week.
+        setFirstDayOfWeek(Calendar.MONDAY);
 
         mMode = Mode.DISPLAY_ONLY;
         mDayArray = new SparseArray<>();
@@ -189,7 +181,7 @@ public class MonthView extends View {
 
         for (int i = 0; i < COLUMN_NUM; i++) {
             float x = i * mWidthOfDay + mHalfWidthOfDay;
-            int dayOfWeek = i % COLUMN_NUM;  // TODO provide method to change the first day of the week.
+            int dayOfWeek = i % COLUMN_NUM;
             String weekday = getWeekdayName(dayOfWeek);
             canvas.drawText(weekday, x, y, mWeekdayTextPaint);
         }
@@ -377,7 +369,10 @@ public class MonthView extends View {
     }
 
     private int getDayOffset() {
-        // TODO provide method to change the default selected day
+        if (mCalendar == null){
+            return -1;
+        }
+        
         mCalendar.set(Calendar.DAY_OF_MONTH, 1);
 
         int startDayOfWeek = mCalendar.get(Calendar.DAY_OF_WEEK);
@@ -444,6 +439,48 @@ public class MonthView extends View {
 
     public void setOnDaySelectListener(OnDaySelectedListener listener){
         this.mOnDaySelectedListener = listener;
+    }
+    
+    /**
+     * Set the first day of week.
+     *
+     * @param day {@link Calendar.MONDAY} and {@link Calendar.SUNDAY} are supported.
+     */
+    @SuppressWarnings("JavadocReference")
+    public void setFirstDayOfWeek(int day) {
+        if (day == Calendar.MONDAY || day == Calendar.SUNDAY) {
+            mFirstDayOfWeek = day;
+            updateWeekdayArray(day);
+            
+            int offset = getDayOffset();
+            if (offset != -1 && offset != mDayOffset) {
+                mDayOffset = offset;
+                postInvalidate();
+            }
+        } else {
+            throw new IllegalArgumentException(TAG + ":The first day of week you enter is not supported.");
+        }
+    }
+    
+    private void updateWeekdayArray(int day) {
+        Locale chineseLocale = new Locale("zh");
+        Locale currentLocale = Locale.getDefault();
+        boolean isChineseUser = currentLocale.getLanguage().equals(chineseLocale.getLanguage());
+        Resources resources = getContext().getResources();
+        
+        if (isChineseUser) {
+            if (day == Calendar.MONDAY) {
+                mWeekdayName = resources.getStringArray(R.array.monday_first_chinese_weekday_name);
+            } else if (day == Calendar.SUNDAY) {
+                mWeekdayName = resources.getStringArray(R.array.sunday_first_chinese_weekday_name);
+            }
+        } else {
+            if (day == Calendar.MONDAY) {
+                mWeekdayName = resources.getStringArray(R.array.monday_first_english_weekday_name);
+            } else if (day == Calendar.SUNDAY) {
+                mWeekdayName = resources.getStringArray(R.array.sunday_first_english_weekday_name);
+            }
+        }
     }
 
     public void setMode(Mode mode){

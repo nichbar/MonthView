@@ -34,6 +34,7 @@ public class MainActivity extends Activity {
         mMonthView.setCalendar(calendar);
         mMonthView.setDayStyleArray(array);
         mMonthView.setMode(MonthView.Mode.SELECT);
+        mMonthView.setFirstDayOfWeek(Calendar.SUNDAY);
         mMonthView.setOnDayClickListener(new MonthView.OnDayClickedListener() {
             @Override
             public void onDayClicked(int day) {
