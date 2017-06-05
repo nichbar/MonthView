@@ -106,6 +106,17 @@ public class MonthView extends View {
             mHintDayTextColor = a.getColor(R.styleable.MonthView_hint_day_textColor, getResources().getColor(R.color.nc_default_hint_day_text_color));
             mHighlightTextColor = a.getColor(R.styleable.MonthView_highlight_day_textColor, getResources().getColor(R.color.nc_default_highlight_day_text_color));
             a.recycle();
+        } else {
+            mRowHeight = dp2px(DEFAULT_DAY_HEIGHT);
+            mTextSize = sp2px(DEFAULT_DAY_TEXT_SIZE);
+            mDayRadius = dp2px(DEFAULT_DAY_RADIUS);
+            mDayClickable = true;
+    
+            mWeekdayTextColor = getResources().getColor(R.color.nc_default_weekday_text_color);
+            mHighlightColor = getResources().getColor(R.color.nc_default_highlight_color);
+            mDayTextColor = getResources().getColor(R.color.nc_default_day_text_color);
+            mHintDayTextColor = getResources().getColor(R.color.nc_default_hint_day_text_color);
+            mHighlightTextColor = getResources().getColor(R.color.nc_default_highlight_day_text_color);
         }
         
         mPaddingBottom = dp2px(PADDING_BOTTOM);
@@ -404,6 +415,10 @@ public class MonthView extends View {
 
             postInvalidate();
         }
+    }
+    
+    public Calendar getCalendar(){
+        return mCalendar;
     }
 
     /**
