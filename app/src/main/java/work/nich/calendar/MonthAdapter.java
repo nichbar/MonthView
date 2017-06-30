@@ -6,7 +6,7 @@ import android.view.ViewGroup;
 
 import java.util.List;
 
-import work.nich.calendarview.MonthView;
+import work.nich.view.MonthView;
 
 public class MonthAdapter extends PagerAdapter{
     private List<MonthView> mMonthList;

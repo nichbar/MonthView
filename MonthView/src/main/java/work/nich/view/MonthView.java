@@ -1,4 +1,4 @@
-package work.nich.calendarview;
+package work.nich.view;
 
 import android.content.Context;
 import android.content.res.Resources;
