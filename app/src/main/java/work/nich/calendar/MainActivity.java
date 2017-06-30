@@ -8,10 +8,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
 import work.nich.view.HighlightStyle;
+import work.nich.view.MonthDay;
 import work.nich.view.MonthView;
 
 /**
@@ -44,7 +46,6 @@ public class MainActivity extends Activity {
         for (int i = 0; i < 12; i++) {
             MonthView monthView = new MonthView(this);
             monthView.setMode(MonthView.Mode.SELECT);
-            monthView.setSelectedStyle(HighlightStyle.TOP_SEMICIRCLE);
             calendar = Calendar.getInstance();
             calendar.set(Calendar.MONTH, i);
             monthView.setCalendar(calendar);
@@ -152,7 +153,9 @@ public class MainActivity extends Activity {
     
     public void getSelectedDays(View view) {
         for (MonthView monthView : mMonthViews) {
-            monthView.getSelectedDays();
+            MonthDay monthDayArray[] = monthView.getSelectedDays();
+            if (monthDayArray.length != 0)
+                Toast.makeText(this, Arrays.toString(monthDayArray), Toast.LENGTH_LONG).show();
         }
     }
 }

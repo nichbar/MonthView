@@ -427,7 +427,7 @@ public class MonthView extends View {
      *
      * @return selected days.
      */
-    public int[] getSelectedDays() {
+    public int[] getSimpleSelectedDays() {
         ArrayList<Integer> mSelectedDays = new ArrayList<>();
         for (int i = 1; i <= 31; i++) {
             if (mDayArray.get(i, HighlightStyle.NO_HIGHLIGHT) != HighlightStyle.NO_HIGHLIGHT) {
@@ -435,6 +435,32 @@ public class MonthView extends View {
             }
         }
         int[] selectedDays = new int[mSelectedDays.size()];
+        for (int i = 0; i < mSelectedDays.size(); i++) {
+            selectedDays[i] = mSelectedDays.get(i);
+        }
+        return selectedDays;
+    }
+    
+    /**
+     * Get days that the user selected as a MonthDay array.
+     * Every MonthDay entity contains day, month and year info.
+     *
+     * @return selected days.
+     */
+    public MonthDay[] getSelectedDays() {
+        MonthDay day;
+        
+        ArrayList<MonthDay> mSelectedDays = new ArrayList<>();
+        for (int i = 1; i <= 31; i++) {
+            if (mDayArray.get(i, HighlightStyle.NO_HIGHLIGHT) != HighlightStyle.NO_HIGHLIGHT) {
+                day = new MonthDay();
+                day.mDay = i;
+                day.mMonth = mCalendar.get(Calendar.MONTH) + 1;
+                day.mYear = mCalendar.get(Calendar.YEAR);
+                mSelectedDays.add(day);
+            }
+        }
+        MonthDay[] selectedDays = new MonthDay[mSelectedDays.size()];
         for (int i = 0; i < mSelectedDays.size(); i++) {
             selectedDays[i] = mSelectedDays.get(i);
         }
@@ -568,7 +594,7 @@ public class MonthView extends View {
      * In DISPLAY_ONLY mode you can only set a {@link OnDayClickedListener} by {@link #setOnDayClickListener(OnDayClickedListener)}
      * and do whatever you what in onDayClicked(day) callback.
      *
-     * In SELECT mode you can call {@link #getSelectedDays()} to get user's selection.
+     * In SELECT mode you can call {@link #getSelectedDays()} or {@link #getSimpleSelectedDays()}to get user's selection.
      */
     public enum Mode {
         DISPLAY_ONLY, SELECT
