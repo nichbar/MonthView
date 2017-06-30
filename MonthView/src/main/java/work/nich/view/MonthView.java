@@ -74,6 +74,7 @@ public class MonthView extends View {
 
     private Mode mMode;
     private Calendar mCalendar; // calendar of this month
+    private HighlightStyle mSelectedStyle = HighlightStyle.SOLID_CIRCLE;
 
     public MonthView(Context context) {
         this(context, null);
@@ -247,12 +248,12 @@ public class MonthView extends View {
                 break;
             case TOP_SEMICIRCLE:
                 drawCircle(canvas, x, y - mTextSize / 3, mDayRadius, mHighlightedRingPaint);
-                drawSemiCircle(canvas, rectF, 0, 180, mHighlightedCirclePaint);
+                drawSemiCircle(canvas, rectF, 180, 180, mHighlightedCirclePaint);
                 drawDayText(canvas, day, x, y, mHighlightedDayTextPaint);
                 break;
             case BOTTOM_SEMICIRCLE:
                 drawCircle(canvas, x, y - mTextSize / 3, mDayRadius, mHighlightedRingPaint);
-                drawSemiCircle(canvas, rectF, 180, 180, mHighlightedCirclePaint);
+                drawSemiCircle(canvas, rectF, 0, 180, mHighlightedCirclePaint);
                 drawDayText(canvas, day, x, y, mHighlightedDayTextPaint);
                 break;
         }
@@ -354,7 +355,7 @@ public class MonthView extends View {
     private void toggleHighlight(int i) {
         boolean isActionOn = mDayArray.get(i, HighlightStyle.NO_HIGHLIGHT) == HighlightStyle.NO_HIGHLIGHT;
         if (isActionOn) {
-            mDayArray.append(i, HighlightStyle.SOLID_CIRCLE);
+            mDayArray.append(i, mSelectedStyle);
         } else {
             mDayArray.append(i, HighlightStyle.NO_HIGHLIGHT);
         }
@@ -510,6 +511,13 @@ public class MonthView extends View {
      */
     public void setDayClickable(boolean clickable) {
         mDayClickable = clickable;
+    }
+    
+    /**
+     * Change selected style.
+     */
+    public void setSelectedStyle(HighlightStyle style){
+        mSelectedStyle = style;
     }
     
     // TODO ReMeasure when there's a blank row.

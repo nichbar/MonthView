@@ -3,12 +3,15 @@ package work.nich.calendar;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import work.nich.view.HighlightStyle;
 import work.nich.view.MonthView;
 
 /**
@@ -18,17 +21,21 @@ import work.nich.view.MonthView;
 
 public class MainActivity extends Activity {
     private List<MonthView> mMonthViews;
-    private MonthView mMonthView;
+    
     private TextView mMonthTv;
+    private ViewPager mViewPager;
+    
+    private MonthView.Mode mMode = MonthView.Mode.DISPLAY_ONLY;
+    private HighlightStyle mHighlightStyle = HighlightStyle.SOLID_CIRCLE;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity);
-        init();
+        bindViewPager();
     }
     
-    private void init() {
+    private void bindViewPager() {
         Calendar calendar;
         mMonthTv = (TextView) findViewById(R.id.tv_month);
         
@@ -37,6 +44,7 @@ public class MainActivity extends Activity {
         for (int i = 0; i < 12; i++) {
             MonthView monthView = new MonthView(this);
             monthView.setMode(MonthView.Mode.SELECT);
+            monthView.setSelectedStyle(HighlightStyle.TOP_SEMICIRCLE);
             calendar = Calendar.getInstance();
             calendar.set(Calendar.MONTH, i);
             monthView.setCalendar(calendar);
@@ -45,15 +53,15 @@ public class MainActivity extends Activity {
         
         final MonthAdapter adapter = new MonthAdapter();
         adapter.setMonthList(mMonthViews);
-        
-        ViewPager pager = (ViewPager) findViewById(R.id.pager);
-        pager.setAdapter(adapter);
+    
+        mViewPager = (ViewPager) findViewById(R.id.pager);
+        mViewPager.setAdapter(adapter);
         
         calendar = Calendar.getInstance();
-        pager.setCurrentItem(calendar.get(Calendar.MONTH));
-        mMonthTv.setText(calendar.get(Calendar.YEAR) + "年" + (calendar.get(Calendar.MONTH) + 1) + "月");
-        
-        pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+        mViewPager.setCurrentItem(calendar.get(Calendar.MONTH));
+        mMonthTv.setText(calendar.get(Calendar.YEAR) + "." + (calendar.get(Calendar.MONTH) + 1));
+    
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
                 
@@ -62,7 +70,7 @@ public class MainActivity extends Activity {
             @Override
             public void onPageSelected(int position) {
                 Calendar cal = adapter.getMonthView(position).getCalendar();
-                mMonthTv.setText(cal.get(Calendar.YEAR) + "年" + (cal.get(Calendar.MONTH) + 1) + "月");
+                mMonthTv.setText(cal.get(Calendar.YEAR) + "." + (cal.get(Calendar.MONTH) + 1));
             }
             
             @Override
@@ -98,5 +106,53 @@ public class MainActivity extends Activity {
 //                Toast.makeText(MainActivity.this, Integer.toString(day) + "deselected", Toast.LENGTH_SHORT).show();
 //            }
 //        });
+    }
+    
+    public void changeMode(View view) {
+        if (mMode == MonthView.Mode.SELECT) {
+            mMode = MonthView.Mode.DISPLAY_ONLY;
+            Toast.makeText(this, "now you are in display only mode", Toast.LENGTH_SHORT).show();
+        } else {
+            mMode = MonthView.Mode.SELECT;
+            Toast.makeText(this, "now you are in select mode", Toast.LENGTH_SHORT).show();
+        }
+        for (MonthView monthView : mMonthViews) {
+            monthView.setMode(mMode);
+        }
+        
+        mViewPager.getAdapter().notifyDataSetChanged();
+    }
+    
+    public void changeStyle(View view) {
+        switch (mHighlightStyle) {
+            case SOLID_CIRCLE:
+                mHighlightStyle = HighlightStyle.RING_ONLY;
+                Toast.makeText(this, "'ring only' style", Toast.LENGTH_SHORT).show();
+                break;
+            case RING_ONLY:
+                mHighlightStyle = HighlightStyle.TOP_SEMICIRCLE;
+                Toast.makeText(this, "'top semicircle' style", Toast.LENGTH_SHORT).show();
+                break;
+            case TOP_SEMICIRCLE:
+                mHighlightStyle = HighlightStyle.BOTTOM_SEMICIRCLE;
+                Toast.makeText(this, "'bottom semicircle' style", Toast.LENGTH_SHORT).show();
+                break;
+            case BOTTOM_SEMICIRCLE:
+                mHighlightStyle = HighlightStyle.SOLID_CIRCLE;
+                Toast.makeText(this, "'solid circle' style", Toast.LENGTH_SHORT).show();
+                break;
+        }
+    
+        for (MonthView monthView : mMonthViews) {
+            monthView.setSelectedStyle(mHighlightStyle);
+        }
+    
+        mViewPager.getAdapter().notifyDataSetChanged();
+    }
+    
+    public void getSelectedDays(View view) {
+        for (MonthView monthView : mMonthViews) {
+            monthView.getSelectedDays();
+        }
     }
 }
