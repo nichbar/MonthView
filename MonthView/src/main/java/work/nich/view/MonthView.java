@@ -526,7 +526,28 @@ public class MonthView extends View {
             }
         }
     }
-
+    
+    public void setWeekdayTextColor(int weekdayTextColor) {
+        mWeekdayTextPaint.setColor(weekdayTextColor);
+    }
+    
+    public void setHighlightColor(int highlightColor) {
+        mHighlightedCirclePaint.setColor(highlightColor);
+        mHighlightedRingPaint.setColor(highlightColor);
+    }
+    
+    public void setDayTextColor(int dayTextColor) {
+        mDayTextPaint.setColor(mDayTextColor);
+    }
+    
+    public void setHighlightTextColor(int highlightTextColor) {
+        mHighlightedDayTextPaint.setColor(highlightTextColor);
+    }
+    
+    public void setHintDayTextColor(int hintDayTextColor) {
+        mHintDayTextPaint.setColor(hintDayTextColor);
+    }
+    
     public void setMode(Mode mode){
         mMode = mode;
     }
