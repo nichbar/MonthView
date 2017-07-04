@@ -34,7 +34,7 @@ public class MonthView extends View {
 
     private static final int DEFAULT_WEEKDAY_HEIGHT = 30;
     private static final int DEFAULT_DAY_HEIGHT = 40;
-    private static final int DEFAULT_DAY_TEXT_SIZE = 14;
+    private static final int DEFAULT_DAY_TEXT_SIZE = 15;
     private static final int DEFAULT_DAY_RADIUS = 18;
     private static final int PADDING_BOTTOM = 8;
 
