@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.SparseArray;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
@@ -25,29 +26,52 @@ public class MainActivity extends Activity {
     private MonthView.Mode mMode = MonthView.Mode.DISPLAY_ONLY;
     private HighlightStyle mHighlightStyle = HighlightStyle.SOLID_CIRCLE;
     
+    private boolean mCalendarIsThisMonth;
+    private boolean mMondayIsTheFirstDay;
+    
+    private Calendar mCurrentMonthCalendar;
+    private Calendar mPreBuiltCalendar;
+    
+    private SparseArray<HighlightStyle> mHighlightArray;
+    
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity);
-        bindViewPager();
+        
+        init();
+        initView();
     }
     
-    private void bindViewPager() {
-        Calendar calendar = Calendar.getInstance();
+    private void init(){
+        mPreBuiltCalendar = Calendar.getInstance();
+        mPreBuiltCalendar.set(Calendar.YEAR, 2017);
+        mPreBuiltCalendar.set(Calendar.MONTH, Calendar.MARCH);
+    
+        mHighlightArray = new SparseArray<>();
+        mHighlightArray.append(16, HighlightStyle.BOTTOM_SEMICIRCLE);
+        mHighlightArray.append(17, HighlightStyle.SOLID_CIRCLE);
+        mHighlightArray.append(18, HighlightStyle.TOP_SEMICIRCLE);
+        mHighlightArray.append(19, HighlightStyle.BOTTOM_SEMICIRCLE);
+        mHighlightArray.append(21, HighlightStyle.RING_ONLY);
+    }
+    
+    private void initView() {
+        mCurrentMonthCalendar = Calendar.getInstance();
     
         MonthView monthView = new MonthView(this);
         monthView.setMode(MonthView.Mode.SELECT);
-        monthView.setCalendar(calendar);
+        monthView.setCalendar(mCurrentMonthCalendar);
     
         mMonthView = (MonthView) findViewById(R.id.view_month);
         SparseArray<HighlightStyle> array = new SparseArray<>();
-        array.append(calendar.get(Calendar.DAY_OF_MONTH), HighlightStyle.SOLID_CIRCLE);
+        array.append(mCurrentMonthCalendar.get(Calendar.DAY_OF_MONTH), HighlightStyle.SOLID_CIRCLE);
 
-        mMonthView.setCalendar(calendar);
+        mMonthView.setCalendar(mCurrentMonthCalendar);
         mMonthView.setDayStyleArray(array);
         mMonthView.setMode(MonthView.Mode.SELECT);
-        mMonthView.setFirstDayOfWeek(Calendar.SUNDAY);
-        mMonthView.setDisplayHintDays(false);
+        mMonthView.setFirstDayOfWeek(Calendar.MONDAY);
         mMonthView.setOnDayClickListener(new MonthView.OnDayClickedListener() {
             @Override
             public void onDayClicked(int day) {
@@ -101,8 +125,37 @@ public class MainActivity extends Activity {
     }
     
     public void getSelectedDays(View view) {
+        // Use getSimpleSelectedDays() to retrieve a integer array;
         MonthDay monthDayArray[] = mMonthView.getSelectedDays();
         if (monthDayArray.length != 0)
             Toast.makeText(this, Arrays.toString(monthDayArray), Toast.LENGTH_LONG).show();
+    }
+    
+    public void switchCalendar(View view) {
+        TextView tv = (TextView) view;
+        
+        if (!mCalendarIsThisMonth) {
+            mMonthView.setCalendar(mPreBuiltCalendar);
+            mMonthView.setDayStyleArray(mHighlightArray);
+            tv.setText("switch to built in calendar");
+        } else {
+            mMonthView.setCalendar(mCurrentMonthCalendar);
+            mMonthView.setDayStyleArray(null);
+            tv.setText("switch to this month");
+        }
+        mCalendarIsThisMonth = !mCalendarIsThisMonth;
+    }
+    
+    public void switchFirstDay(View view) {
+        TextView tv = (TextView) view;
+    
+        if (mMondayIsTheFirstDay) {
+            mMonthView.setFirstDayOfWeek(Calendar.MONDAY);
+            tv.setText("set Sunday as the first day");
+        } else {
+            mMonthView.setFirstDayOfWeek(Calendar.SUNDAY);
+            tv.setText("set Monday as the first day");
+        }
+        mMondayIsTheFirstDay = !mMondayIsTheFirstDay;
     }
 }

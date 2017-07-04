@@ -244,7 +244,7 @@ public class MonthView extends View {
                 break;
             case RING_ONLY:
                 drawCircle(canvas, x, y - mTextSize / 3, mDayRadius, mHighlightedRingPaint);
-                drawDayText(canvas, day, x, y, mHighlightedDayTextPaint);
+                drawDayText(canvas, day, x, y, mDayTextPaint);
                 break;
             case TOP_SEMICIRCLE:
                 drawCircle(canvas, x, y - mTextSize / 3, mDayRadius, mHighlightedRingPaint);
@@ -474,7 +474,11 @@ public class MonthView extends View {
      * @param array a sparseArray , the key is the day, the value is the style you wanna highlight in {@link HighlightStyle}
      */
     public void setDayStyleArray(SparseArray<HighlightStyle> array) {
-        mDayArray = array;
+        if (array != null) {
+            mDayArray = array;
+        } else {
+            mDayArray = new SparseArray<>();
+        }
     }
 
     public void setOnDayClickListener(OnDayClickedListener listener) {
