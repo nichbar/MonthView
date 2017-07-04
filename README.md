@@ -23,7 +23,7 @@ Then add the dependency:
 
 ```groovy
 dependencies {
-	compile 'com.github.nichbar:MonthView:v0.1'
+	compile 'com.github.nichbar:MonthView:0.2'
 }
 ```
 ## Usage
