@@ -91,6 +91,6 @@ mMonthView.setOnDaySelectListener(new MonthView.OnDaySelectedListener() {
 
 For more detail usage, you may take a look at [WIKI]().
 
-### License
+## License
 
 [GPL-3.0](https://github.com/nichbar/MonthView/blob/master/LICENSE)
