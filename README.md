@@ -1,7 +1,7 @@
 [![](https://jitpack.io/v/nichbar/MonthView.svg)](https://jitpack.io/#nichbar/MonthView)
 
 # MonthView
-MonthView is a lightweight month view draw by canvas.
+MonthView is a lightweight month view draw in canvas.
 
 <img src="images/monthView.png" width="480">
 
@@ -88,8 +88,6 @@ mMonthView.setOnDaySelectListener(new MonthView.OnDaySelectedListener() {
       }
 });
 ```
-
-For more detail usage, you may take a look at [WIKI]().
 
 ## License
 
